@@ -2,7 +2,10 @@ from os import path
 
 import nonebot
 
-MODULES_ON = {'test'}
+MODULES_ON = {
+    'clanbattle',
+    'test',
+}
 
 
 def init(config) -> nonebot.NoneBot:
