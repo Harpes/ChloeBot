@@ -5,7 +5,7 @@ import nonebot
 MODULES_ON = {
     'clanbattle',
     'group_chats',
-    # 'test',
+    'manager',
 }
 
 

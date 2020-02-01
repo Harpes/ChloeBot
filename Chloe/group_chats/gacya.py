@@ -79,7 +79,7 @@ async def _(session: CommandSession):
     msg = ''
     if session.ctx['message_type'] == 'group':
         context = session.ctx
-        # await bot.set_group_ban(group_id=context['group_id'], user_id=context['user_id'], duration=30)
+        await session.bot.set_group_ban(group_id=context['group_id'], user_id=context['user_id'], duration=30)
         msg = '[CQ:at,qq={}] '.format(str(context['user_id']))
 
     for x in range(10):
@@ -127,7 +127,7 @@ async def _(session: CommandSession):
     msg = ''
     if session.ctx['message_type'] == 'group':
         context = session.ctx
-        # await bot.set_group_ban(group_id=context['group_id'], user_id=context['user_id'], duration=40)
+        await session.bot.set_group_ban(group_id=context['group_id'], user_id=context['user_id'], duration=40)
         msg = '[CQ:at,qq={}] '.format(str(context['user_id']))
 
     for i in range(30):
@@ -153,7 +153,6 @@ async def _(session: CommandSession):
     msg += f'获得{n3 * stones[0] + n2 * stones[1] + n1 * stones[2]}个无名之石'
 
     name = session.ctx['user_id']
-    a = 0
     newPic = Image.new('RGBA', (n3 * 62 + 2, 64), color='lavenderblush')
     for x in range(n3):
         pic = Image.open(result[x] + '.png')
