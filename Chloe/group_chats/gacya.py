@@ -6,7 +6,11 @@ from nonebot import CommandSession, on_command
 from PIL import Image
 
 imgRoot = os.path.join(os.path.dirname(__file__), 'image')
+if not os.path.exists(imgRoot + '\\out'):
+    os.mkdir(imgRoot + '\\out')
+
 os.chdir(imgRoot)
+
 
 gacya3 = ['杏奈', '真步', '璃乃',
           '初音', '霞', '伊緒',
@@ -30,9 +34,9 @@ gacya2 = ['茉莉', '茜里', '宮子',
 
 gacya1 = ['日和', '怜', '禊', '胡桃', '依里', '鈴莓', '優花梨', '碧', '美咲', '莉瑪', '步未']
 
-gacyaFes = ['矛依未', '克莉絲提娜', 'ネネカ']
+gacyaFes = ['矛依未', '克莉絲提娜', '似似花']
 
-gacyaUp = ['キョウカ（ハロウィン）']
+gacyaUp = ['鏡華（萬聖節）']
 
 stones = [50, 10, 1]
 
@@ -106,17 +110,18 @@ async def _(session: CommandSession):
 
     msg += f'获得{n3 * stones[0] + n2 * stones[1] + n1 * stones[2]}个无名之石'
 
-    background = Image.new('RGBA', (312, 126), color='lavenderblush')
+    background = Image.new('RGBA', (652, 262))
     name = session.ctx['user_id']
     a = 0
     for x in range(5):
         for y in range(2):
             pic = Image.open(result[a] + '.png')
-            background.paste(pic, (x * 62 + 2, y * 62 + 2))
+            background.paste(pic, (x * 130 + 2, y * 130 + 2))
             a += 1
-    background.save(imgRoot + f'\\out\\{name}.png')
+    background.save(imgRoot + f'\\out\\{name}.png', quality=100)
+    msg += f'[CQ:image,file=file:///{imgRoot}\\out\\{name}.png]'
 
-    await session.send(msg + f'[CQ:image,file=file:///{imgRoot}\\out\\{name}.png]')
+    await session.send(msg)
 
 
 @on_command('抽一井', only_to_me=False)
@@ -153,11 +158,11 @@ async def _(session: CommandSession):
     msg += f'获得{n3 * stones[0] + n2 * stones[1] + n1 * stones[2]}个无名之石'
 
     name = session.ctx['user_id']
-    newPic = Image.new('RGBA', (n3 * 62 + 2, 64), color='lavenderblush')
+    newPic = Image.new('RGBA', (n3 * 130 + 2, 128))
     for x in range(n3):
         pic = Image.open(result[x] + '.png')
-        newPic.paste(pic, (x * 62 + 2, 2))
-    newPic.save(imgRoot + f'\\out\\{name}.png')
+        newPic.paste(pic, (x * 130, 0))
+    newPic.save(imgRoot + f'\\out\\{name}.png', quality=100)
     msg += f'[CQ:image,file=file:///{imgRoot}\\out\\{name}.png]'
 
     msg += f'\n共计{n3}个三星，{n2}个两星，{n1}个一星'
