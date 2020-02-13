@@ -4,29 +4,42 @@ from random import randint, sample
 import nonebot
 from nonebot import CommandSession, on_command, permission
 
+bot = nonebot.get_bot()
 
-@on_command('抽奖', permission=permission.GROUP, only_to_me=False)
-async def _(session: CommandSession):
-    context = session.ctx
-    bot = session.bot
 
+@bot.on_message('group')
+async def _(context):
+    message = context['raw_message']
     group_id = context['group_id']
     user_id = context['user_id']
 
-    ban_time = randint(120, 480)
-    await bot.set_group_ban(group_id=group_id, user_id=user_id, duration=ban_time)
+    if '抽' in message and '奖' in message:
+        ban_time = randint(120, 480)
+        for _ in range(message.count('大')):
+            ban_time += randint(12000, 24000)
+        await bot.set_group_ban(group_id=group_id, user_id=user_id, duration=ban_time)
 
+# @on_command('抽奖', permission=permission.GROUP, only_to_me=False)
+# async def _(session: CommandSession):
+#     context = session.ctx
+#     bot = session.bot
 
-@on_command('抽大奖', permission=permission.GROUP, only_to_me=False)
-async def _(session: CommandSession):
-    context = session.ctx
-    bot = session.bot
+#     group_id = context['group_id']
+#     user_id = context['user_id']
 
-    group_id = context['group_id']
-    user_id = context['user_id']
+#     ban_time = randint(120, 480)
+#     await bot.set_group_ban(group_id=group_id, user_id=user_id, duration=ban_time)
 
-    ban_time = randint(12000, 25000)
-    await bot.set_group_ban(group_id=group_id, user_id=user_id, duration=ban_time)
+# @on_command('抽大奖', permission=permission.GROUP, only_to_me=False)
+# async def _(session: CommandSession):
+#     context = session.ctx
+#     bot = session.bot
+
+#     group_id = context['group_id']
+#     user_id = context['user_id']
+
+#     ban_time = randint(12000, 25000)
+#     await bot.set_group_ban(group_id=group_id, user_id=user_id, duration=ban_time)
 
 
 @on_command('精致睡眠', permission=permission.GROUP, only_to_me=False)
@@ -107,10 +120,9 @@ async def _(session: CommandSession):
                      for user in group_members if user['role'] == 'member']
 
     targets = sample(group_members, min(len(group_members), 4))
-    ban_time = 600
-    for target_id in targets:
-        t = randint(30, 120)
-        ban_time += t
-        await bot.set_group_ban(group_id=group_id, user_id=target_id, duration=t)
+    ban_time = [randint(30, 120), randint(
+        30, 120), randint(30, 120), randint(30, 120)]
+    await bot.set_group_ban(group_id=group_id, user_id=user_id, duration=(sum(ban_time) + 450))
 
-    await bot.set_group_ban(group_id=group_id, user_id=user_id, duration=ban_time)
+    for i, target_id in enumerate(targets):
+        await bot.set_group_ban(group_id=group_id, user_id=target_id, duration=ban_time[i])
