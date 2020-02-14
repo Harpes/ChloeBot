@@ -32,15 +32,11 @@ def format_int(x: int) -> str:
 
 @on_command('add-clan', permission=perm.SUPERUSER, shell_like=True, only_to_me=False)
 async def add_clan(session: CommandSession):
-
-    if not await perm.check_permission(session.bot, session.ctx, perm.SUPERUSER):
-        await session.finish('Error: 只有管理员才能添加新公会')
-
     parser = ArgumentParser(
-        session=session, usage='add-clan --name [--cid] --server')
+        session=session, usage='add-clan --name [--cid] [--server]')
     parser.add_argument('--name', default=None, required=False)
     parser.add_argument('--cid', type=int, default=-1)
-    parser.add_argument('--server', default='Unknown')
+    parser.add_argument('--server', default='tw')
     args = parser.parse_args(session.argv)
     group_id = session.ctx['group_id']
     battlemaster = BattleMaster(group_id)
@@ -58,8 +54,8 @@ async def add_clan(session: CommandSession):
         cid = cid + 1 if cid > 0 else 1
 
     server = battlemaster.get_server_code(args.server)
-    if server < 0:
-        await session.finish('请指定公会所在服务器 例【add-clan --server jp】')
+    # if server < 0:
+    #     await session.finish('请指定公会所在服务器 例[add-clan --server tw]')
 
     if battlemaster.add_clan(cid, name, server):
         await session.send('公会添加失败...ごめんなさい！嘤嘤嘤(〒︿〒)')
@@ -128,7 +124,9 @@ async def add_member(session: CommandSession):
 async def list_member(session: CommandSession):
     parser = ArgumentParser(session=session, usage='list-member [--cid]')
     parser.add_argument('--cid', type=int, default=1)
-    args = parser.parse_args(session.argv)
+    # args = parser.parse_args(session.argv)
+    args = parser.parse_args(session.argv if len(
+        session.argv) > 0 else ['--cid', '1'])
 
     group_id = session.ctx['group_id']
     cid = args.cid
@@ -140,7 +138,7 @@ async def list_member(session: CommandSession):
         await session.finish('Error: 指定的分会不存在')
     cmems = battlemaster.list_member(cid)
     if len(cmems):
-        msg = f'{cid}会成员一览：  {len(cmems)}/30\nQQ|name\n'
+        msg = f'{cid}会成员一览：  {len(cmems)}/30\nQQ\tname\n'
         # 数字太多会被腾讯ban
         memstr = '{uid: <11,d} {name}\n'
         memstr_alt = '{uid: <11,d} {name} 小号{alt}\n'
@@ -279,8 +277,8 @@ async def process_challenge(session: CommandSession, challenge):
         total_hp = battlemaster.get_boss_hp(prog[0], prog[1], clan['server'])
         score_rate = battlemaster.get_score_rate(
             prog[0], prog[1], clan['server'])
-        msg1 = f"记录成功！\n{mem['name']}对{round_}周目老{battlemaster.int2kanji(boss)}造成了{damage:,d}点伤害\n"
-        msg2 = f"当前{cid}会进度：\n{prog[0]}周目 老{battlemaster.int2kanji(prog[1])} HP={prog[2]:,d}/{total_hp:,d} x{score_rate:.1f}"
+        msg1 = f"记录成功！\n{mem['name']}对{round_}周目{battlemaster.int2kanji(boss)}王造成了{damage:,d}点伤害\n"
+        msg2 = f"当前{cid}会进度：\n{prog[0]}周目 {battlemaster.int2kanji(prog[1])}王 HP={prog[2]:,d}/{total_hp:,d} x{score_rate:.1f}"
         await session.send(f'{warn_prog}{warn_last}{msg1}{msg2}')
 
 
@@ -349,7 +347,9 @@ async def _(session: CommandSession):
 async def show_progress(session: CommandSession):
     parser = ArgumentParser(session=session, usage='show-progress [--cid]')
     parser.add_argument('--cid', type=int, default=1)
-    args = parser.parse_args(session.argv)
+    # args = parser.parse_args(session.argv)
+    args = parser.parse_args(session.argv if len(
+        session.argv) > 0 else ['--cid', '1'])
 
     group_id = session.ctx['group_id']
     battlemaster = BattleMaster(group_id)
@@ -369,7 +369,9 @@ async def show_progress(session: CommandSession):
 async def stat(session: CommandSession):
     parser = ArgumentParser(session=session, usage='stat [--cid]')
     parser.add_argument('--cid', type=int, default=1)
-    args = parser.parse_args(session.argv)
+    # args = parser.parse_args(session.argv)
+    args = parser.parse_args(session.argv if len(
+        session.argv) > 0 else ['--cid', '1'])
 
     group_id = session.ctx['group_id']
     cid = args.cid
@@ -379,7 +381,7 @@ async def stat(session: CommandSession):
 
     stat.sort(key=lambda x: x[3], reverse=True)
     msg1 = []
-    for uid, alt, name, score in stat:
+    for _uid, _alt, name, score in stat:
         # QQ字体非等宽，width(空格*2) == width(数字*1)
         # 数字太多会被腾讯ban，用逗号分隔
         score = f'{score:,d}'
@@ -395,7 +397,9 @@ async def show_remain(session: CommandSession):
 
     parser = ArgumentParser(session=session, usage='show-remain [--cid]')
     parser.add_argument('--cid', type=int, default=1)
-    args = parser.parse_args(session.argv)
+    # args = parser.parse_args(session.argv)
+    args = parser.parse_args(session.argv if len(
+        session.argv) > 0 else ['--cid', '1'])
 
     group_id = session.ctx['group_id']
     cid = args.cid
@@ -430,7 +434,9 @@ async def list_challenge(session: CommandSession):
     # parser.add_argument('--uid', type=int, default=-1)
     # parser.add_argument('--alt', type=int, default=0)
     parser.add_argument('--all', action='store_true')
-    args = parser.parse_args(session.argv)
+    # args = parser.parse_args(session.argv)
+    args = parser.parse_args(session.argv if len(
+        session.argv) > 0 else ['--cid', '1'])
 
     group_id = session.ctx['group_id']
     cid = args.cid
