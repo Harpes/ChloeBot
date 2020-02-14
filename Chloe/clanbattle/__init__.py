@@ -1,6 +1,8 @@
 # 公主连接Re:Dive会战管理插件
 # clan == クラン == 戰隊（直译为氏族）（CLANNAD的CLAN（笑））
 
+import json
+import os
 import re
 from datetime import datetime
 
@@ -288,7 +290,7 @@ async def add_challenge_e(session: CommandSession):
     简易报刀
     为学不会命令行的沙雕群友准备的简易版报刀命令。目前仅支持给自己的大号报刀
     '''
-    USAGE = "使用方法：\n【 dmge 伤害数字 r周目 b老几 [last|ext|timeout] 】\n例：对5周目老4造成了114万点伤害\n【 dmge 114w r5 b4 】"
+    USAGE = "使用方法：\n【 dmge 伤害数字 r周目 几王 [last|ext|timeout] 】\n例：对5周目四王造成了114万点伤害\n【 dmge 114w r5 b4 】"
     challenge = session.state['challenge']
     challenge['uid'] = session.ctx['user_id']
     challenge['alt'] = 0
@@ -417,7 +419,7 @@ async def show_remain(session: CommandSession):
         if rem_n or rem_e:
             line = (str(MessageSegment.at(uid)) if is_admin else name) + \
                    (f'的小号{alt} ' if alt else '') + \
-                   (f' 余{rem_n}刀 补时{rem_e}刀\n' if rem_e else f'余{rem_n}刀\n')
+                   (f' 余{rem_n}刀 补时{rem_e}刀\n' if rem_e else f' 余{rem_n}刀\n')
             msg1.append(line)
 
     if msg1:
@@ -452,8 +454,8 @@ async def list_challenge(session: CommandSession):
     challen = battlemaster.list_challenge(
         cid, now) if args.all else battlemaster.list_challenge_of_day(cid, now, zone)
 
-    msg = f'{cid}会出刀记录：\neid|name|round|boss|damage\n'
-    challenstr = '{eid:0>3d}|{name}|r{round}|b{boss}|{dmg: >7,d}{flag_str}\n'
+    msg = f'{cid}会出刀记录：\neid\tname\tround\tboss\tdamage\n'
+    challenstr = '{eid:0>3d}\t{name}\tr{round}\tb{boss}\t{dmg: >7,d}{flag_str}\n'
     for c in challen:
         mem = battlemaster.get_member(c['uid'], c['alt'])
         c['name'] = mem['name'] if mem else c['uid']
@@ -495,3 +497,81 @@ async def del_challenge(session: CommandSession):
         await session.send('记录删除失败...ごめんなさい！嘤嘤嘤(〒︿〒)')
     else:
         await session.send(f'已成功删除{cid}会的{eid}号出刀记录')
+
+
+default_reservation = {str(i):  [] for i in range(1, 6)}
+reservations_folder = os.path.join(os.path.dirname(__file__), 'reservations')
+bossNames = ['一王', '二王', '三王', '四王', '五王']
+
+
+if not os.path.exists(reservations_folder):
+    os.mkdir(reservations_folder)
+
+
+@on_command('see_reserve', aliases=("查询预约", ), only_to_me=False)
+async def _(session: CommandSession):
+    context = session.ctx
+    if context['message_type'] != 'group':
+        return
+
+    group_id = context['group_id']
+
+    reservation_path = reservations_folder + '\\' + str(group_id)+'.json'
+    if not os.path.exists(reservation_path):
+        await session.send('当前没有Boss预约')
+    else:
+        msg = "当前各王预约人数："
+        reservation = json.load(open(reservation_path, 'r'))
+        for index, r_list in reservation.items():
+            name = bossNames[int(index) - 1]
+            msg += f'\n{name}：{len(r_list)}人'
+
+        await session.send(msg)
+
+
+async def reserve_function(session: CommandSession, bossIndex):
+    context = session.ctx
+    if context['message_type'] != 'group':
+        return
+
+    group_id = context['group_id']
+    user_id = context['user_id']
+
+    reservation_path = reservations_folder + '\\' + str(group_id)+'.json'
+    reservation = default_reservation.copy()
+    if os.path.exists(reservation_path):
+        reservation = json.load(open(reservation_path, 'r'))
+    reservation_list = reservation.get(str(bossIndex), [])
+
+    if user_id in reservation_list:
+        await session.send(f'[CQ:at,qq={user_id}] 你已预约过{bossNames[bossIndex - 1]}，请勿重复预约')
+    else:
+        reservation_list.append(user_id)
+        reservation[str(bossIndex)] = reservation_list
+        json.dump(reservation, open(reservation_path, 'w'))
+        await session.send(f'[CQ:at,qq={user_id}] 你已成功预约{bossNames[bossIndex - 1]}，当前Boss预约人数：{len(reservation_list)}')
+
+
+@on_command('reserve1', aliases=('预约一王', ), only_to_me=False)
+async def _(session: CommandSession):
+    await reserve_function(session, 1)
+
+
+@on_command('reserve2', aliases=('预约二王', ), only_to_me=False)
+async def _(session: CommandSession):
+    await reserve_function(session, 2)
+
+
+@on_command('reserve3', aliases=('预约三王', ), only_to_me=False)
+async def _(session: CommandSession):
+    await reserve_function(session, 3)
+
+
+@on_command('reserve4', aliases=('预约四王', ), only_to_me=False)
+async def _(session: CommandSession):
+    await reserve_function(session, 4)
+
+
+@on_command('reserve5', aliases=('预约五王', ), only_to_me=False)
+async def _(session: CommandSession):
+    await reserve_function(session, 5)
