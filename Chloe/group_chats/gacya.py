@@ -36,7 +36,7 @@ gacya1 = ['日和', '怜', '禊', '胡桃', '依里', '鈴莓', '優花梨', '�
 
 gacyaFes = ['矛依未', '克莉絲提娜', '似似花']
 
-gacyaUp = ['鏡華（萬聖節）']
+gacyaUp = ['忍（萬聖節）', '美咲（萬聖節）']
 
 stones = [50, 10, 1]
 
@@ -110,13 +110,13 @@ async def _(session: CommandSession):
 
     msg += f'获得{n3 * stones[0] + n2 * stones[1] + n1 * stones[2]}个无名之石'
 
-    background = Image.new('RGBA', (652, 262))
+    background = Image.new('RGBA', (640, 256))
     name = session.ctx['user_id']
     a = 0
     for x in range(5):
         for y in range(2):
             pic = Image.open(result[a] + '.png')
-            background.paste(pic, (x * 130 + 2, y * 130 + 2))
+            background.paste(pic, (x * 128, y * 128))
             a += 1
     background.save(imgRoot + f'\\out\\{name}.png', quality=100)
     msg += f'[CQ:image,file=file:///{imgRoot}\\out\\{name}.png]'
@@ -158,10 +158,10 @@ async def _(session: CommandSession):
     msg += f'获得{n3 * stones[0] + n2 * stones[1] + n1 * stones[2]}个无名之石'
 
     name = session.ctx['user_id']
-    newPic = Image.new('RGBA', (n3 * 130 + 2, 128))
+    newPic = Image.new('RGBA', (n3 * 128, 128))
     for x in range(n3):
         pic = Image.open(result[x] + '.png')
-        newPic.paste(pic, (x * 130, 0))
+        newPic.paste(pic, (x * 128, 0))
     newPic.save(imgRoot + f'\\out\\{name}.png', quality=100)
     msg += f'[CQ:image,file=file:///{imgRoot}\\out\\{name}.png]'
 
