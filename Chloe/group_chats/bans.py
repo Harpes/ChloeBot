@@ -19,28 +19,6 @@ async def _(context):
             ban_time += randint(12000, 24000)
         await bot.set_group_ban(group_id=group_id, user_id=user_id, duration=ban_time)
 
-# @on_command('抽奖', permission=permission.GROUP, only_to_me=False)
-# async def _(session: CommandSession):
-#     context = session.ctx
-#     bot = session.bot
-
-#     group_id = context['group_id']
-#     user_id = context['user_id']
-
-#     ban_time = randint(120, 480)
-#     await bot.set_group_ban(group_id=group_id, user_id=user_id, duration=ban_time)
-
-# @on_command('抽大奖', permission=permission.GROUP, only_to_me=False)
-# async def _(session: CommandSession):
-#     context = session.ctx
-#     bot = session.bot
-
-#     group_id = context['group_id']
-#     user_id = context['user_id']
-
-#     ban_time = randint(12000, 25000)
-#     await bot.set_group_ban(group_id=group_id, user_id=user_id, duration=ban_time)
-
 
 @on_command('精致睡眠', permission=permission.GROUP, only_to_me=False)
 async def _(session: CommandSession):
