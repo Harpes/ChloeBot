@@ -9,8 +9,6 @@ imgRoot = os.path.join(os.path.dirname(__file__), 'image')
 if not os.path.exists(imgRoot + '\\out'):
     os.mkdir(imgRoot + '\\out')
 
-os.chdir(imgRoot)
-
 
 gacya3 = ['杏奈', '真步', '璃乃',
           '初音', '霞', '伊緒',
@@ -115,7 +113,7 @@ async def _(session: CommandSession):
     a = 0
     for x in range(5):
         for y in range(2):
-            pic = Image.open(result[a] + '.png')
+            pic = Image.open(f'{imgRoot}\\{result[a]}.png')
             background.paste(pic, (x * 128, y * 128))
             a += 1
     background.save(imgRoot + f'\\out\\{name}.png', quality=100)
@@ -160,7 +158,7 @@ async def _(session: CommandSession):
     name = session.ctx['user_id']
     newPic = Image.new('RGBA', (n3 * 128, 128))
     for x in range(n3):
-        pic = Image.open(result[x] + '.png')
+        pic = Image.open(f'{imgRoot}\\{result[x]}.png')
         newPic.paste(pic, (x * 128, 0))
     newPic.save(imgRoot + f'\\out\\{name}.png', quality=100)
     msg += f'[CQ:image,file=file:///{imgRoot}\\out\\{name}.png]'

@@ -3,8 +3,7 @@ import logging
 import os
 import sqlite3
 
-DB_PATH = os.path.join(os.path.dirname(__file__), 'clanbattle.db')
-# DB_PATH = os.path.join(os.path.expanduser('~'), '.hoshino/clanbattle.db')
+DB_PATH = 'clanbattle.db'
 
 
 class SqliteDao(object):

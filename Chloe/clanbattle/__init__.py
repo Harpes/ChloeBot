@@ -508,7 +508,7 @@ async def del_challenge(session: CommandSession):
 
 bossNames = ['一王', '二王', '三王', '四王', '五王']
 default_reservation = {str(i):  [] for i in range(1, 6)}
-reservations_folder = os.path.join(os.path.dirname(__file__), 'reservations')
+reservations_folder = 'reservations'
 if not os.path.exists(reservations_folder):
     os.mkdir(reservations_folder)
 
