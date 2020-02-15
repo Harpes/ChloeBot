@@ -499,11 +499,9 @@ async def del_challenge(session: CommandSession):
         await session.send(f'已成功删除{cid}会的{eid}号出刀记录')
 
 
+bossNames = ['一王', '二王', '三王', '四王', '五王']
 default_reservation = {str(i):  [] for i in range(1, 6)}
 reservations_folder = os.path.join(os.path.dirname(__file__), 'reservations')
-bossNames = ['一王', '二王', '三王', '四王', '五王']
-
-
 if not os.path.exists(reservations_folder):
     os.mkdir(reservations_folder)
 
@@ -529,7 +527,7 @@ async def _(session: CommandSession):
         await session.send(msg)
 
 
-async def reserve_function(session: CommandSession, bossIndex):
+async def reserve_function(session: CommandSession, boss_index: int):
     context = session.ctx
     if context['message_type'] != 'group':
         return
@@ -541,15 +539,15 @@ async def reserve_function(session: CommandSession, bossIndex):
     reservation = default_reservation.copy()
     if os.path.exists(reservation_path):
         reservation = json.load(open(reservation_path, 'r'))
-    reservation_list = reservation.get(str(bossIndex), [])
+    reservation_list = reservation.get(str(boss_index), [])
 
     if user_id in reservation_list:
-        await session.send(f'[CQ:at,qq={user_id}] 你已预约过{bossNames[bossIndex - 1]}，请勿重复预约')
+        await session.send(f'[CQ:at,qq={user_id}] 你已预约过{bossNames[boss_index - 1]}，请勿重复预约')
     else:
         reservation_list.append(user_id)
-        reservation[str(bossIndex)] = reservation_list
+        reservation[str(boss_index)] = reservation_list
         json.dump(reservation, open(reservation_path, 'w'))
-        await session.send(f'[CQ:at,qq={user_id}] 你已成功预约{bossNames[bossIndex - 1]}，当前Boss预约人数：{len(reservation_list)}')
+        await session.send(f'[CQ:at,qq={user_id}] 你已成功预约{bossNames[boss_index - 1]}，当前Boss预约人数：{len(reservation_list)}')
 
 
 @on_command('reserve1', aliases=('预约一王', ), only_to_me=False)
@@ -575,3 +573,51 @@ async def _(session: CommandSession):
 @on_command('reserve5', aliases=('预约五王', ), only_to_me=False)
 async def _(session: CommandSession):
     await reserve_function(session, 5)
+
+
+async def unreserve_function(session: CommandSession, boss_index: int):
+    context = session.ctx
+    if context['message_type'] != 'group':
+        return
+
+    group_id = context['group_id']
+    user_id = context['user_id']
+
+    reservation_path = reservations_folder + '\\' + str(group_id)+'.json'
+    reservation = default_reservation.copy()
+    if os.path.exists(reservation_path):
+        reservation = json.load(open(reservation_path, 'r'))
+    reservation_list = reservation.get(str(boss_index), [])
+
+    if user_id in reservation_list:
+        reservation_list.remove(user_id)
+        reservation[str(boss_index)] = reservation_list
+        json.dump(reservation, open(reservation_path, 'w'))
+        await session.send(f'[CQ:at,qq={user_id}] 已为你取削预约{bossNames[boss_index - 1]}')
+    else:
+        await session.send(f'[CQ:at,qq={user_id}] 你尚未预约{bossNames[boss_index - 1]}')
+
+
+@on_command('unreserve1', aliases=('取消预约一王', ), only_to_me=False)
+async def _(session: CommandSession):
+    await unreserve_function(session, 1)
+
+
+@on_command('unreserve2', aliases=('取消预约二王', ), only_to_me=False)
+async def _(session: CommandSession):
+    await unreserve_function(session, 2)
+
+
+@on_command('unreserve3', aliases=('取消预约三王', ), only_to_me=False)
+async def _(session: CommandSession):
+    await unreserve_function(session, 3)
+
+
+@on_command('unreserve4', aliases=('取消预约四王', ), only_to_me=False)
+async def _(session: CommandSession):
+    await unreserve_function(session, 4)
+
+
+@on_command('unreserve5', aliases=('取消预约五王', ), only_to_me=False)
+async def _(session: CommandSession):
+    await unreserve_function(session, 5)
