@@ -253,35 +253,42 @@ async def process_challenge(session: CommandSession, challenge):
 
     flag = challenge['flag']
 
-    prog = battlemaster.get_challenge_progress(cid, datetime.now())
+    current_round, current_boss, current_hp = battlemaster.get_challenge_progress(
+        cid, datetime.now())
     warn_prog = '该伤害上报与当前进度不一致，请注意核对\n' if not (
-        round_ == prog[0] and boss == prog[1]) else ''
+        round_ == current_round and boss == current_boss) else ''
     warn_last = ''
 
     # 尾刀伤害校验
-    if round_ == prog[0] and boss == prog[1]:
-        if damage > prog[2] + 50000:        # 忘加尾刀标志、撞刀
+    if round_ == current_round and boss == current_boss:
+        if damage > current_hp + 50000:        # 忘加尾刀标志、撞刀
             warn_last = '发生过度虐杀，伤害数值已自动修正并标记尾刀，请注意检查是否撞刀\n'
-            damage = prog[2]
+            damage = current_hp
             flag = BattleMaster.LAST
         # 使用整万数报尾刀，伤害不足
-        elif flag & BattleMaster.LAST and damage >= prog[2] - 50000 and 0 == damage % 10000:
+        elif flag & BattleMaster.LAST and damage >= current_hp - 50000 and 0 == damage % 10000:
             warn_last = '尾刀伤害已自动校对\n'
-            damage = prog[2]
+            damage = current_hp
         # 报尾刀，但伤害严重不足
-        elif flag & BattleMaster.LAST and damage < prog[2] - 50000:
+        elif flag & BattleMaster.LAST and damage < current_hp - 50000:
             warn_last = '本次尾刀上报后，Boss仍有较多血量，请注意核对并请尚未报刀的成员及时报刀\n'
 
     if battlemaster.add_challenge(uid, alt, round_, boss, damage, flag, datetime.now()):
         await session.send('记录添加失败...ごめんなさい！嘤嘤嘤(〒︿〒)')
     else:
-        prog = battlemaster.get_challenge_progress(cid, datetime.now())
-        total_hp = battlemaster.get_boss_hp(prog[0], prog[1], clan['server'])
+        after_round, after_boss, after_hp = battlemaster.get_challenge_progress(
+            cid, datetime.now())
+        total_hp = battlemaster.get_boss_hp(
+            after_round, after_boss, clan['server'])
         score_rate = battlemaster.get_score_rate(
-            prog[0], prog[1], clan['server'])
+            after_round, after_boss, clan['server'])
         msg1 = f"记录成功！\n{mem['name']}对{round_}周目{battlemaster.int2kanji(boss)}王造成了{damage:,d}点伤害\n"
-        msg2 = f"当前{cid}会进度：\n{prog[0]}周目 {battlemaster.int2kanji(prog[1])}王 HP={prog[2]:,d}/{total_hp:,d} x{score_rate:.1f}"
+        msg2 = f"当前{cid}会进度：\n{after_round}周目 {battlemaster.int2kanji(after_boss)}王 HP={after_hp:,d}/{total_hp:,d} x{score_rate:.1f}"
         await session.send(f'{warn_prog}{warn_last}{msg1}{msg2}')
+
+        # 判断是否更换boss，呼叫预约
+        if after_round > current_round or (after_round == current_round and after_boss > current_boss):
+            await call_reserve(session, after_round, after_boss)
 
 
 @on_command('add-challenge-e', aliases=('dmge', '刀'), permission=perm.GROUP, only_to_me=False)
@@ -506,6 +513,23 @@ if not os.path.exists(reservations_folder):
     os.mkdir(reservations_folder)
 
 
+async def call_reserve(session: CommandSession, round_: int, boss_index: int):
+    context = session.ctx
+    group_id = context['group_id']
+
+    reservation_path = reservations_folder + '\\' + str(group_id)+'.json'
+    if os.path.exists(reservation_path):
+        reservation = json.load(
+            open(reservation_path, 'r'))
+        reservation_list = reservation.get(str(boss_index), [])
+        reservation[str(boss_index)] = []
+        json.dump(reservation, open(reservation_path, 'w'))
+        msg = f'公会战已轮到{round_}周目{bossNames[boss_index - 1]}，请尽快出刀，如需下轮请重新预约。'
+        for user_id in reservation_list:
+            msg += f'\n[CQ:at,qq={user_id}]'
+        await session.send(msg)
+
+
 @on_command('see_reserve', aliases=("查询预约", ), only_to_me=False)
 async def _(session: CommandSession):
     context = session.ctx
@@ -550,6 +574,29 @@ async def reserve_function(session: CommandSession, boss_index: int):
         await session.send(f'[CQ:at,qq={user_id}] 你已成功预约{bossNames[boss_index - 1]}，当前Boss预约人数：{len(reservation_list)}')
 
 
+async def unreserve_function(session: CommandSession, boss_index: int):
+    context = session.ctx
+    if context['message_type'] != 'group':
+        return
+
+    group_id = context['group_id']
+    user_id = context['user_id']
+
+    reservation_path = reservations_folder + '\\' + str(group_id)+'.json'
+    reservation = default_reservation.copy()
+    if os.path.exists(reservation_path):
+        reservation = json.load(open(reservation_path, 'r'))
+    reservation_list = reservation.get(str(boss_index), [])
+
+    if user_id in reservation_list:
+        reservation_list.remove(user_id)
+        reservation[str(boss_index)] = reservation_list
+        json.dump(reservation, open(reservation_path, 'w'))
+        await session.send(f'[CQ:at,qq={user_id}] 已为你取削预约{bossNames[boss_index - 1]}')
+    else:
+        await session.send(f'[CQ:at,qq={user_id}] 你尚未预约{bossNames[boss_index - 1]}')
+
+
 @on_command('reserve1', aliases=('预约一王', ), only_to_me=False)
 async def _(session: CommandSession):
     await reserve_function(session, 1)
@@ -573,29 +620,6 @@ async def _(session: CommandSession):
 @on_command('reserve5', aliases=('预约五王', ), only_to_me=False)
 async def _(session: CommandSession):
     await reserve_function(session, 5)
-
-
-async def unreserve_function(session: CommandSession, boss_index: int):
-    context = session.ctx
-    if context['message_type'] != 'group':
-        return
-
-    group_id = context['group_id']
-    user_id = context['user_id']
-
-    reservation_path = reservations_folder + '\\' + str(group_id)+'.json'
-    reservation = default_reservation.copy()
-    if os.path.exists(reservation_path):
-        reservation = json.load(open(reservation_path, 'r'))
-    reservation_list = reservation.get(str(boss_index), [])
-
-    if user_id in reservation_list:
-        reservation_list.remove(user_id)
-        reservation[str(boss_index)] = reservation_list
-        json.dump(reservation, open(reservation_path, 'w'))
-        await session.send(f'[CQ:at,qq={user_id}] 已为你取削预约{bossNames[boss_index - 1]}')
-    else:
-        await session.send(f'[CQ:at,qq={user_id}] 你尚未预约{bossNames[boss_index - 1]}')
 
 
 @on_command('unreserve1', aliases=('取消预约一王', ), only_to_me=False)
