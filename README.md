@@ -112,7 +112,7 @@ _SUPERUSER 不受权限控制影响_
 | ---- | ----------- | ------------- | ---- | ------------ | --------------------- |
 | ok   | reserveX    | 预约 X 王     |      | GROUP_MEMBER | 预约 boss，到达时提醒 |
 | ok   | unreserveX  | 取消预约 X 王 |      | GROUP_MEMBER | 取消预约 boss         |
-| ok   | see_reserve | 查看预约      |      | GROUP_MEMBER | 查看 boss 的预约情况  |
+| ok   | see_reserve | 查询预约      |      | GROUP_MEMBER | 查看 boss 的预约情况  |
 |      | enqueue     | enq / 入队    |      | GROUP_MEMBER | 进入出刀队列          |
 |      | dequeue     | deq / 出队    |      | GROUP_MEMBER | 退出出刀队列          |
 
