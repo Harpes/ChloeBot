@@ -70,13 +70,13 @@ class BattleMaster(object):
 
     @staticmethod
     def get_stage(round_):
-        return 3 if round_ >= 11 else 2 if round_ >= 4 else 1
+        return 4 if round_ >= 999 else 3 if round_ >= 11 else 2 if round_ >= 4 else 1
 
     @staticmethod
     def get_boss_hp(round_, boss, server):
         stage = BattleMaster.get_stage(round_)
         config = get_config()
-        return config[config["BOSS_HP"][server]][stage - 1][boss - 1] * 10000
+        return config[config["BOSS_HP"][server]][stage - 1][boss - 1]
 
     @staticmethod
     def get_score_rate(round_, boss, server):

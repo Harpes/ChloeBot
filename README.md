@@ -58,11 +58,11 @@ dmg 1919810 -r11 -b4 --last
 dmg -r -b damage [--uid] [--alt] [--ext | --last | --timeout]
 ```
 
-- r/round: 周目数
-- b/boss: Boss 编号
-- ext/last/timeout: 补时刀/尾刀/掉刀 标志，仅能指定其中一种
-- uid: 上报对象的 QQ 号（用于为他人代报）
-- alt: 上报对象的小号编号
+-   r/round: 周目数
+-   b/boss: Boss 编号
+-   ext/last/timeout: 补时刀/尾刀/掉刀 标志，仅能指定其中一种
+-   uid: 上报对象的 QQ 号（用于为他人代报）
+-   alt: 上报对象的小号编号
 
 ---
 
@@ -108,11 +108,13 @@ _SUPERUSER 不受权限控制影响_
 
 ### 预约/排队
 
-| 进度 | 命令      | 别名       | 参数   | 权限         | 说明                  |
-| ---- | --------- | ---------- | ------ | ------------ | --------------------- |
-|      | subscribe | sub / 预约 | --boss | GROUP_MEMBER | 预约 boss，到达时提醒 |
-|      | enqueue   | enq / 入队 |        | GROUP_MEMBER | 进入出刀队列          |
-|      | dequeue   | deq / 出队 |        | GROUP_MEMBER | 退出出刀队列          |
+| 进度 | 命令        | 别名          | 参数 | 权限         | 说明                  |
+| ---- | ----------- | ------------- | ---- | ------------ | --------------------- |
+| ok   | reserveX    | 预约 X 王     |      | GROUP_MEMBER | 预约 boss，到达时提醒 |
+| ok   | unreserveX  | 取消预约 X 王 |      | GROUP_MEMBER | 取消预约 boss         |
+| ok   | see_reserve | 查看预约      |      | GROUP_MEMBER | 查看 boss 的预约情况  |
+|      | enqueue     | enq / 入队    |      | GROUP_MEMBER | 进入出刀队列          |
+|      | dequeue     | deq / 出队    |      | GROUP_MEMBER | 退出出刀队列          |
 
 ### 会战统计
 
