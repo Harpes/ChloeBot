@@ -14,6 +14,12 @@ from .battlemaster import BattleMaster
 
 __plugin_name__ = 'clanbattle'
 
+bossNames = ['一王', '二王', '三王', '四王', '五王']
+default_reservation = {str(i):  [] for i in range(1, 6)}
+reservations_folder = 'reservations'
+if not os.path.exists(reservations_folder):
+    os.mkdir(reservations_folder)
+
 
 def get_digi(x: int):
     '''
@@ -32,7 +38,28 @@ def format_int(x: int) -> str:
     pass
 
 
-@on_command('add-clan', permission=perm.SUPERUSER, shell_like=True, only_to_me=False)
+@on_command('clan-help', aliases=('会战指令',), permission=perm.GROUP, only_to_me=False)
+async def _(session: CommandSession):
+    msg = '※公会管理'
+    msg += '\n添加公会： add-clan --name 你的公会名'
+    msg += '\n加入公会： join-clan --name 你的角色名'
+
+    msg += '\n※报刀指令'
+    msg += '\n简易版报刀：  刀 114w r8 b1'
+    msg += '\n或者详细伤害： dmg 1919810 -r11 -b4 [--ext|--last|--timeout]'
+    msg += '\n其中-r：周目数 -b：Boss编号。-r11 -b4指11周目四王'
+    msg += '\next/last/timeout 分别指 补时刀/尾刀/掉刀 标志，仅能指定其中一种'
+
+    msg += '\n※公会战指令'
+    msg += '\n当前进度： 会战进度'
+    msg += '\n预约相关： 预约三王/取消预约三王/查询预约'
+    msg += '\n余刀查询： show-remain（管理员调用时将进行催刀。）'
+    msg += '\n分数排行： stat'
+
+    session.finish(msg)
+
+
+@on_command('add-clan', permission=perm.SUPERUSER | perm.GROUP_OWNER, shell_like=True, only_to_me=False)
 async def add_clan(session: CommandSession):
     parser = ArgumentParser(
         session=session, usage='add-clan --name [--cid] [--server]')
@@ -126,9 +153,7 @@ async def add_member(session: CommandSession):
 async def list_member(session: CommandSession):
     parser = ArgumentParser(session=session, usage='list-member [--cid]')
     parser.add_argument('--cid', type=int, default=1)
-    # args = parser.parse_args(session.argv)
-    args = parser.parse_args(session.argv if len(
-        session.argv) > 0 else ['--cid', '1'])
+    args = parser.parse_args(session.argv)
 
     group_id = session.ctx['group_id']
     cid = args.cid
@@ -352,13 +377,11 @@ async def _(session: CommandSession):
     session.state['challenge'] = ret
 
 
-@on_command('show-progress', permission=perm.GROUP, shell_like=True, only_to_me=False)
+@on_command('show-progress', aliases=('会战进度', '当前进度'), permission=perm.GROUP, shell_like=True, only_to_me=False)
 async def show_progress(session: CommandSession):
     parser = ArgumentParser(session=session, usage='show-progress [--cid]')
     parser.add_argument('--cid', type=int, default=1)
-    # args = parser.parse_args(session.argv)
-    args = parser.parse_args(session.argv if len(
-        session.argv) > 0 else ['--cid', '1'])
+    args = parser.parse_args(session.argv)
 
     group_id = session.ctx['group_id']
     battlemaster = BattleMaster(group_id)
@@ -378,9 +401,7 @@ async def show_progress(session: CommandSession):
 async def stat(session: CommandSession):
     parser = ArgumentParser(session=session, usage='stat [--cid]')
     parser.add_argument('--cid', type=int, default=1)
-    # args = parser.parse_args(session.argv)
-    args = parser.parse_args(session.argv if len(
-        session.argv) > 0 else ['--cid', '1'])
+    args = parser.parse_args(session.argv)
 
     group_id = session.ctx['group_id']
     cid = args.cid
@@ -406,9 +427,7 @@ async def show_remain(session: CommandSession):
 
     parser = ArgumentParser(session=session, usage='show-remain [--cid]')
     parser.add_argument('--cid', type=int, default=1)
-    # args = parser.parse_args(session.argv)
-    args = parser.parse_args(session.argv if len(
-        session.argv) > 0 else ['--cid', '1'])
+    args = parser.parse_args(session.argv)
 
     group_id = session.ctx['group_id']
     cid = args.cid
@@ -443,9 +462,7 @@ async def list_challenge(session: CommandSession):
     # parser.add_argument('--uid', type=int, default=-1)
     # parser.add_argument('--alt', type=int, default=0)
     parser.add_argument('--all', action='store_true')
-    # args = parser.parse_args(session.argv)
-    args = parser.parse_args(session.argv if len(
-        session.argv) > 0 else ['--cid', '1'])
+    args = parser.parse_args(session.argv)
 
     group_id = session.ctx['group_id']
     cid = args.cid
@@ -506,13 +523,6 @@ async def del_challenge(session: CommandSession):
         await session.send(f'已成功删除{cid}会的{eid}号出刀记录')
 
 
-bossNames = ['一王', '二王', '三王', '四王', '五王']
-default_reservation = {str(i):  [] for i in range(1, 6)}
-reservations_folder = 'reservations'
-if not os.path.exists(reservations_folder):
-    os.mkdir(reservations_folder)
-
-
 async def call_reserve(session: CommandSession, round_: int, boss_index: int):
     context = session.ctx
     group_id = context['group_id']
@@ -530,7 +540,7 @@ async def call_reserve(session: CommandSession, round_: int, boss_index: int):
         await session.send(msg)
 
 
-@on_command('see_reserve', aliases=("查询预约", ), only_to_me=False)
+@on_command('see_reserve', aliases=("查询预约", "预约查询"), only_to_me=False)
 async def _(session: CommandSession):
     context = session.ctx
     if context['message_type'] != 'group':
