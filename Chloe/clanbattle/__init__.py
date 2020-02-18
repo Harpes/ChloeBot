@@ -46,7 +46,7 @@ async def _(session: CommandSession):
 
     msg += '\n※报刀指令'
     msg += '\n简易版报刀：  刀 114w r8 b1'
-    msg += '\n或者详细伤害： dmg 1919810 -r11 -b4 [--ext|--last|--timeout]'
+    msg += '\n或者详细版： dmg 1919810 -r11 -b4 [--ext|--last|--timeout]'
     msg += '\n其中-r：周目数 -b：Boss编号。-r11 -b4指11周目四王'
     msg += '\next/last/timeout 分别指 补时刀/尾刀/掉刀 标志，仅能指定其中一种'
 
