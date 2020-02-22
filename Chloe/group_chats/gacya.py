@@ -1,3 +1,4 @@
+import math
 import os
 import random as rd
 
@@ -73,6 +74,54 @@ async def _(session: CommandSession):
     await session.send(msg + pic)
 
 
+@on_command('单抽到up', only_to_me=False)
+async def _(session: CommandSession):
+    result = []
+    n3, n2, n1 = [0, 0, 0]
+
+    msg = ''
+    if session.ctx['message_type'] == 'group':
+        context = session.ctx
+        await session.bot.set_group_ban(group_id=context['group_id'], user_id=context['user_id'], duration=30)
+        msg = '[CQ:at,qq={}] '.format(str(session.ctx['user_id']))
+
+    once_more = True
+    while once_more:
+        i = rd.random() * 100
+        if i <= pUp:
+            result.append(rd.choice(gacyaUp))
+            n3 += 1
+            once_more = False
+        elif i <= pFes:
+            result.append(rd.choice(gacyaFes))
+            n3 += 1
+        elif i <= p3:
+            result.append(rd.choice(gacya3))
+            n3 += 1
+        elif i <= p2:
+            n2 += 1
+        else:
+            n1 += 1
+
+    msg += f'花费{n3 + n2 + n1}抽，获得{n3 * stones[0] + n2 * stones[1] + n1 * stones[2]}个无名之石'
+
+    width = 6 * 128 if n3 > 5 else n3 * 128
+    height = math.ceil(n3 / 6) * 128
+    background = Image.new('RGBA', (width, height))
+    name = session.ctx['user_id']
+    for index, cha in enumerate(result):
+        pic = Image.open(f'{imgRoot}\\{cha}.png')
+        col = index % 6
+        row = index // 6
+        background.paste(pic, (col * 128, row * 128))
+    background.save(imgRoot + f'\\out\\{name}.png', quality=100)
+    msg += f'\n[CQ:image,file=file:///{imgRoot}\\out\\{name}.png]'
+
+    msg += f'\n共计{n3}个三星，{n2}个两星，{n1}个一星'
+
+    await session.send(msg)
+
+
 @on_command('十连抽', only_to_me=False)
 async def _(session: CommandSession):
     result = []
@@ -122,6 +171,58 @@ async def _(session: CommandSession):
     await session.send(msg)
 
 
+@on_command('抽到up', only_to_me=False)
+async def _(session: CommandSession):
+    result = []
+    n3, n2, n1 = [0, 0, 0]
+
+    msg = ''
+    if session.ctx['message_type'] == 'group':
+        context = session.ctx
+        await session.bot.set_group_ban(group_id=context['group_id'], user_id=context['user_id'], duration=40)
+        msg = '[CQ:at,qq={}] '.format(str(context['user_id']))
+
+    once_more = True
+    while once_more:
+        for x in range(10):
+            i = rd.random() * 100
+            if i <= pUp:
+                result.append(rd.choice(gacyaUp))
+                n3 += 1
+                once_more = False
+            elif i <= pFes:
+                result.append(rd.choice(gacyaFes))
+                n3 += 1
+            elif i <= p3:
+                result.append(rd.choice(gacya3))
+                n3 += 1
+            elif i <= p2:
+                n2 += 1
+            else:
+                if x == 9:
+                    n2 += 1
+                else:
+                    n1 += 1
+
+    msg += f'花费{n3 + n2 + n1}抽，获得{n3 * stones[0] + n2 * stones[1] + n1 * stones[2]}个无名之石'
+
+    width = 6 * 128 if n3 > 5 else n3 * 128
+    height = math.ceil(n3 / 6) * 128
+    background = Image.new('RGBA', (width, height))
+    name = session.ctx['user_id']
+    for index, cha in enumerate(result):
+        pic = Image.open(f'{imgRoot}\\{cha}.png')
+        col = index % 6
+        row = index // 6
+        background.paste(pic, (col * 128, row * 128))
+    background.save(imgRoot + f'\\out\\{name}.png', quality=100)
+    msg += f'\n[CQ:image,file=file:///{imgRoot}\\out\\{name}.png]'
+
+    msg += f'\n共计{n3}个三星，{n2}个两星，{n1}个一星'
+
+    await session.send(msg)
+
+
 @on_command('抽一井', only_to_me=False)
 async def _(session: CommandSession):
     result = []
@@ -153,15 +254,19 @@ async def _(session: CommandSession):
                 else:
                     n1 += 1
 
-    msg += f'获得{n3 * stones[0] + n2 * stones[1] + n1 * stones[2]}个无名之石'
+    msg += f'花费{n3 + n2 + n1}抽，获得{n3 * stones[0] + n2 * stones[1] + n1 * stones[2]}个无名之石'
 
+    width = 6 * 128 if n3 > 5 else n3 * 128
+    height = math.ceil(n3 / 6) * 128
+    background = Image.new('RGBA', (width, height))
     name = session.ctx['user_id']
-    newPic = Image.new('RGBA', (n3 * 128, 128))
-    for x in range(n3):
-        pic = Image.open(f'{imgRoot}\\{result[x]}.png')
-        newPic.paste(pic, (x * 128, 0))
-    newPic.save(imgRoot + f'\\out\\{name}.png', quality=100)
-    msg += f'[CQ:image,file=file:///{imgRoot}\\out\\{name}.png]'
+    for index, cha in enumerate(result):
+        pic = Image.open(f'{imgRoot}\\{cha}.png')
+        col = index % 6
+        row = index // 6
+        background.paste(pic, (col * 128, row * 128))
+    background.save(imgRoot + f'\\out\\{name}.png', quality=100)
+    msg += f'\n[CQ:image,file=file:///{imgRoot}\\out\\{name}.png]'
 
     msg += f'\n共计{n3}个三星，{n2}个两星，{n1}个一星'
 

@@ -6,8 +6,6 @@ from nonebot import CommandSession, NoticeSession, on_command, on_notice
 
 bot = nonebot.get_bot()
 
-random.seed(12306)
-
 
 @bot.on_message('group')
 async def _(context):
