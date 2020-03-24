@@ -51,7 +51,7 @@ async def _(session: CommandSession):
 
 @on_command('后卫rank')
 async def _(session: CommandSession):
-    path = os.path.join(os.path.dirname(__file__), "R15-3B.jpeg")
+    path = os.path.join(os.path.dirname(__file__), "R15-4B.jpeg")
     await session.send(f'[CQ:image,file=file:///{path}]')
 
 
