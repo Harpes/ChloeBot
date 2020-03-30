@@ -24,12 +24,12 @@ class DataBaseIO(object):
         conn.execute(create_sql)
         return conn
 
-    def createClan(self) -> sqlite3.Connection:
+    def _createClan(self) -> sqlite3.Connection:
         return self.createTable('clan', [
             'gid INT PRIMARY KEY NOT NULL', 'name TEXT NOT NULL', 'server INT NOT NULL'])
 
     def addClan(self, gid: int, name: str, server: int):
-        conn = self.createClan()
+        conn = self._createClan()
 
         insert_sql = 'INSERT INTO clan VALUES (%d, "%s", %d)' % (
             gid, name, server)
@@ -39,7 +39,7 @@ class DataBaseIO(object):
         conn.close()
 
     def getClan(self, gid: int) -> list:
-        conn = self.createClan()
+        conn = self._createClan()
         cur = conn.cursor()
 
         select_sql = 'SELECT name, server FROM clan WHERE gid = %d' % (gid, )
@@ -51,24 +51,27 @@ class DataBaseIO(object):
 
         return result
 
-    def createMember(self) -> sqlite3.Connection:
-        return self.createTable('member', ['gid INT NOT NULL', 'uid INT NOT NULL', 'name TEXT NOT NULL', 'PRIMARY KEY (gid, uid)'])
+    def _createMember(self) -> (sqlite3.Connection, str):
+        month = getMonth(datetime.now())
+        return (self.createTable('member' + month, ['gid INT NOT NULL', 'uid INT NOT NULL',
+                                                    'name TEXT NOT NULL', 'PRIMARY KEY (gid, uid)']), month)
 
     def addMember(self, gid: int, uid: int, name: str):
-        conn = self.createMember()
+        conn, month = self._createMember()
 
-        insert_sql = 'INSERT INTO member VALUES (%d, %d, "%s")' % (
-            gid, uid, name)
+        insert_sql = 'INSERT INTO member%s VALUES (%d, %d, "%s")' % (
+            month, gid, uid, name)
         conn.execute(insert_sql)
 
         conn.commit()
         conn.close()
 
     def getMember(self, gid: int, uid: int = None):
-        conn = self.createMember()
+        conn, month = self._createMember()
         cur = conn.cursor()
 
-        select_sql = 'SELECT uid, name FROM member WHERE gid = %d' % (gid, )
+        select_sql = 'SELECT uid, name FROM member%s WHERE gid = %d' % (
+            month, gid, )
         if not uid is None:
             select_sql += ' AND uid = %d' % (uid, )
         cur.execute(select_sql)
@@ -79,7 +82,7 @@ class DataBaseIO(object):
 
         return result
 
-    def createRecs(self) -> list:
+    def _createRecs(self) -> (sqlite3.Connection, str):
         month = getMonth(datetime.now())
         return (self.createTable('rec' + month, ['recid INTEGER PRIMARY KEY AUTOINCREMENT',
                                                  'gid INT NOT NULL', 'uid INT NOT NULL',
@@ -87,8 +90,8 @@ class DataBaseIO(object):
                                                  'boss INT NOT NULL', 'dmg INT NOT NULL',
                                                  'flag INT NOT NULL']), month)
 
-    def addRec(self, gid: int, uid: int, r: int, b: int, dmg: int, flag: int):
-        conn, month = self.createRecs()
+    def addRec(self, gid: int, uid: int, r: int, b: int, dmg: int, flag: int = 0):
+        conn, month = self._createRecs()
 
         insert_sql = 'INSERT INTO rec%s VALUES (NULL, %d, %d, "%s", %d, %d, %d, %d)' % (
             month, gid, uid, datetime.now().strftime('%Y/%m/%d %H:%M'), r, b, dmg, flag)
@@ -98,7 +101,7 @@ class DataBaseIO(object):
         conn.close()
 
     def getRec(self, gid: int, uid: int = None, time: datetime = None) -> list:
-        conn, month = self.createRecs()
+        conn, month = self._createRecs()
         cur = conn.cursor()
 
         select_sql = 'SELECT * FROM rec%s WHERE gid = %d' % (month, gid)
@@ -116,7 +119,7 @@ class DataBaseIO(object):
         return result
 
     def delRec(self, recid: int):
-        conn, month = self.createRecs()
+        conn, month = self._createRecs()
 
         delete_sql = 'DELETE FROM rec%d WHERE recid = %d' % (month, recid)
         conn.execute(delete_sql)
