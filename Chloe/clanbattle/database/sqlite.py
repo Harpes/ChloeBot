@@ -90,7 +90,7 @@ class DataBaseIO(object):
                                                  'boss INT NOT NULL', 'dmg INT NOT NULL',
                                                  'flag INT NOT NULL']), month)
 
-    def addRec(self, gid: int, uid: int, r: int, b: int, dmg: int, flag: int = 0):
+    def addRec(self, gid: int, uid: int, r: int, b: int, dmg: int, flag: int):
         conn, month = self._createRecs()
 
         insert_sql = 'INSERT INTO rec%s VALUES (NULL, %d, %d, "%s", %d, %d, %d, %d)' % (

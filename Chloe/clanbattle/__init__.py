@@ -60,3 +60,13 @@ async def show_progress(session: CommandSession):
         await session.finish('当前群没有创建公会')
     else:
         await session.finish('当前%d周目%s，剩余血量%s' % (r, boss_names[boss], '{:,}'.format(hp)))
+
+
+async def add_rec(gid: int, uid: int, r: int, boss: int, flag: int = 0):
+    battleObj.add_rec(gid, uid, r, boss, flag)
+    return battleObj.get_current_state(gid)
+
+
+@on_command('报刀', aliases=('出刀', ), permission=permission.GROUP, only_to_me=False)
+async def handle_dmg(session: CommandSession):
+    pass
