@@ -56,18 +56,21 @@ class BattleMaster(object):
     def add_member(self, gid: int, uid: int, name: str):
         self.databaseObj.addMember(gid, uid, name)
 
-    def get_member(self, gid: int, uid: int) -> str or None:
+    def get_member_name(self, gid: int, uid: int) -> str or None:
         member = self.databaseObj.getMember(gid, uid)
         if len(member) == 0:
             return None
         else:
             return member[0][1]
 
+    def list_member(self, gid: int) -> list:
+        return self.databaseObj.getMember(gid)
+
     # (公会名, round, boss, hp) 公会名为None表示没有公会
-    def get_current_state(self, gid: int):
+    def get_current_state(self, gid: int) -> (str, int, int, int):
         clan = self.get_clan(gid)
         if clan is None:
-            return (None, 1, 1, 1)
+            return (None, -1, -1, -1)
 
         name, server = clan
 
@@ -99,8 +102,8 @@ class BattleMaster(object):
         recs = self.databaseObj.getRec(gid, uid, time)
         return [dict(zip(rec_cols, i)) for i in recs]
 
-    def add_rec(self, gid: int, uid: int, r: int, boss: int, flag: int):
-        self.databaseObj.addRec(gid, uid, r, boss, flag)
+    def add_rec(self, gid: int, uid: int, r: int, boss: int, dmg: int, flag: int):
+        self.databaseObj.addRec(gid, uid, r, boss, dmg, flag)
 
     def delete_rec(self, recid: int):
         self.databaseObj.delRec(recid)
