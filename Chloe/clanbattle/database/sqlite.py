@@ -90,6 +90,7 @@ class DataBaseIO(object):
                                                  'boss INT NOT NULL', 'dmg INT NOT NULL',
                                                  'flag INT NOT NULL']), month)
 
+    # flag: 0:正常刀 1:尾刀 2:余刀
     def addRec(self, gid: int, uid: int, r: int, b: int, dmg: int, flag: int):
         conn, month = self._createRecs()
 
