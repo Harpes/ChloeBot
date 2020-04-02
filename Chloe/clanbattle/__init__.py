@@ -89,7 +89,6 @@ def add_rec(gid: int, uid: int, r: int, boss: int, dmg: int, flag: int = 0):
 
 
 async def update_rec(gid: int, uid: int, dmg: int):
-    print(gid, uid, dmg)
     msg = ''
     rec_type = 0
 
@@ -100,16 +99,16 @@ async def update_rec(gid: int, uid: int, dmg: int):
 
     msg += member_name
 
-    _, prev_round, prev_boss, hp = battleObj.get_current_state(gid)
-    if dmg > hp:
+    _, prev_round, prev_boss, prev_hp = battleObj.get_current_state(gid)
+    if dmg > prev_hp:
         await bot.send_group_msg(group_id=gid, message='伤害超过当前BOSS剩余血量，请修正。')
         return
-    if dmg == -1:
+    if dmg == -1 or dmg == prev_hp:
         rec_type = 1
-        dmg = hp
+        dmg = prev_hp
 
     msg += '对%d周目%s造成了%s伤害' % (prev_round,
-                               boss_names[prev_boss], '{:,}'.format(hp))
+                               boss_names[prev_boss], '{:,}'.format(prev_hp))
 
     member_recs = battleObj.get_rec(gid, uid, get_start_of_day())
     member_today_rec_num, flag = 0, 0
@@ -117,9 +116,26 @@ async def update_rec(gid: int, uid: int, dmg: int):
         flag = rec['flag']
         if flag == 0:
             member_today_rec_num += 1
-        # elif flag == 1:
         elif flag == 2:
             member_today_rec_num += 1
+
+    dmg_type, new_flag = '完整刀', rec_type
+    if flag == 0 or flag == 2:
+        dmg_type = ['完整刀', '尾刀'][rec_type]
+    else:
+        # flag = 1
+        dmg_type = ['余刀', '余尾刀'][rec_type]
+        new_flag = 2
+
+    msg += '(今日第%d刀，%s)' % (member_today_rec_num + 1, dmg_type)
+
+    msg += '\n----------\n'
+    _, after_round, after_boss, after_hp = add_rec(
+        gid, uid, prev_round, prev_boss, dmg, new_flag)
+    msg += '当前%d周目%s，剩余血量%s' % (after_round,
+                                boss_names[after_boss], '{:,}'.format(after_hp))
+
+    await bot.send_group_msg(group_id=gid, message=msg)
 
 
 @bot.on_message('group')
