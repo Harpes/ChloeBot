@@ -7,7 +7,7 @@ DB_PATH = 'clanbattle.db'
 
 def getMonth(time: datetime) -> str:
     day = time - timedelta(hours=5)
-    if day.day < 10:
+    if day.day < 18:
         day -= timedelta(days=day.day)
 
     return day.strftime("%Y%m")
@@ -31,7 +31,7 @@ class DataBaseIO(object):
     def addClan(self, gid: int, name: str, server: int):
         conn = self._createClan()
 
-        insert_sql = 'INSERT INTO clan VALUES (%d, "%s", %d)' % (
+        insert_sql = 'INSERT INTO clan VALUES (%s, "%s", %s)' % (
             gid, name, server)
         conn.execute(insert_sql)
 
@@ -42,7 +42,7 @@ class DataBaseIO(object):
         conn = self._createClan()
         cur = conn.cursor()
 
-        select_sql = 'SELECT name, server FROM clan WHERE gid = %d' % (gid, )
+        select_sql = 'SELECT name, server FROM clan WHERE gid = %s' % (gid, )
         cur.execute(select_sql)
         result = cur.fetchone()
 
@@ -59,7 +59,7 @@ class DataBaseIO(object):
     def addMember(self, gid: int, uid: int, name: str):
         conn, month = self._createMember()
 
-        insert_sql = 'INSERT INTO member%s VALUES (%d, %d, "%s")' % (
+        insert_sql = 'INSERT INTO member%s VALUES (%s, %s, "%s")' % (
             month, gid, uid, name)
         conn.execute(insert_sql)
 
@@ -70,10 +70,10 @@ class DataBaseIO(object):
         conn, month = self._createMember()
         cur = conn.cursor()
 
-        select_sql = 'SELECT uid, name FROM member%s WHERE gid = %d' % (
-            month, gid, )
+        select_sql = 'SELECT uid, name FROM member%s WHERE gid = %s' % (
+            month, gid)
         if not uid is None:
-            select_sql += ' AND uid = %d' % (uid, )
+            select_sql += ' AND uid = %s' % (uid, )
         cur.execute(select_sql)
         result = cur.fetchall()
 
@@ -90,11 +90,11 @@ class DataBaseIO(object):
                                                  'boss INT NOT NULL', 'dmg INT NOT NULL',
                                                  'flag INT NOT NULL']), month)
 
-    # flag: 0:正常刀 1:尾刀 2:余刀
+    # flag: 0:正常刀 1:尾刀 2:余刀 3:余尾刀
     def addRec(self, gid: int, uid: int, r: int, b: int, dmg: int, flag: int):
         conn, month = self._createRecs()
 
-        insert_sql = 'INSERT INTO rec%s VALUES (NULL, %d, %d, "%s", %d, %d, %d, %d)' % (
+        insert_sql = 'INSERT INTO rec%s VALUES (NULL, %s, %s, "%s", %s, %s, %s, %s)' % (
             month, gid, uid, datetime.now().strftime('%Y/%m/%d %H:%M'), r, b, dmg, flag)
         conn.execute(insert_sql)
 
@@ -105,9 +105,9 @@ class DataBaseIO(object):
         conn, month = self._createRecs()
         cur = conn.cursor()
 
-        select_sql = 'SELECT * FROM rec%s WHERE gid = %d' % (month, gid)
+        select_sql = 'SELECT * FROM rec%s WHERE gid = %s' % (month, gid)
         if not uid is None:
-            select_sql += ' AND uid = %d' % (uid, )
+            select_sql += ' AND uid = %s' % (uid, )
         if not time is None:
             select_sql += ' AND time > "%s"' % (
                 time.strftime('%Y/%m/%d %H:%M'), )
@@ -122,7 +122,7 @@ class DataBaseIO(object):
     def delRec(self, recid: int):
         conn, month = self._createRecs()
 
-        delete_sql = 'DELETE FROM rec%d WHERE recid = %d' % (month, recid)
+        delete_sql = 'DELETE FROM rec%s WHERE recid = %s' % (month, recid)
         conn.execute(delete_sql)
 
         conn.commit()

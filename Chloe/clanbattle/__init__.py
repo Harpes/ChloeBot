@@ -44,14 +44,13 @@ async def get_member_name(gid: int, uid: int) -> str:
 
 async def add_clan(session: CommandSession, server: int):
     gid = session.ctx['group_id']
-    # TODO
-    name = '公会名'
+    name = session.argv[0] or str(gid)
 
     clan = battleObj.get_clan(gid)
     if clan is None:
         battleObj.add_clan(gid, name, server)
     else:
-        await session.finish('创建公会失败，当前群已有公会' + clan[0])
+        await session.finish(f'创建公会失败，当前群已有公会[{clan[0]}]')
 
     clan = battleObj.get_clan(gid)
     if clan is None:
@@ -105,39 +104,47 @@ async def update_rec(gid: int, uid: int, dmg: int):
 
     _, prev_round, prev_boss, prev_hp = battleObj.get_current_state(gid)
     if dmg > prev_hp:
-        await bot.send_group_msg(group_id=gid, message='伤害超过当前BOSS剩余血量，请修正。')
+        hp = '{:,}'.format(prev_hp)
+        await bot.send_group_msg(group_id=gid, message=f'伤害超过当前BOSS剩余血量{hp}，请修正。')
         return
     if dmg == -1 or dmg == prev_hp:
         rec_type = 1
         dmg = prev_hp
 
     msg += '对%d周目%s造成了%s伤害' % (prev_round,
-                               boss_names[prev_boss], '{:,}'.format(prev_hp))
+                               boss_names[prev_boss], '{:,}'.format(dmg))
 
     member_recs = battleObj.get_rec(gid, uid, get_start_of_day())
-    member_today_rec_num, flag = 0, 0
+    member_today_rec_nums, flag = 0, 0
     for rec in member_recs:
         flag = rec['flag']
-        if flag == 0:
-            member_today_rec_num += 1
-        elif flag == 2:
-            member_today_rec_num += 1
+        if flag in [0, 2, 3]:
+            member_today_rec_nums += 1
 
     dmg_type, new_flag = '完整刀', rec_type
-    if flag == 0 or flag == 2:
+    if flag in [0, 2, 3]:
         dmg_type = ['完整刀', '尾刀'][rec_type]
     else:
         # flag = 1
         dmg_type = ['余刀', '余尾刀'][rec_type]
-        new_flag = 2
+        new_flag = 2 + rec_type
 
-    msg += '(今日第%d刀，%s)' % (member_today_rec_num + 1, dmg_type)
+    msg += '(今日第%d刀，%s)' % (member_today_rec_nums + 1, dmg_type)
 
     msg += '\n----------\n'
     _, after_round, after_boss, after_hp = add_rec(
         gid, uid, prev_round, prev_boss, dmg, new_flag)
     msg += '当前%d周目%s，剩余血量%s' % (after_round,
                                 boss_names[after_boss], '{:,}'.format(after_hp))
+
+    if prev_boss != after_boss:
+        on_tree = call_reserve(gid, 0)
+        if len(on_tree) > 0:
+            msg += f'\n----------\n可以下树了{on_tree}'
+
+        on_reverse = call_reserve(gid, after_boss)
+        if len(on_reverse) > 0:
+            msg += f'\n----------\n{boss_names[after_boss]}已经出现{on_reverse}'
 
     await bot.send_group_msg(group_id=gid, message=msg)
 
@@ -246,7 +253,7 @@ def call_reserve(gid: int, boss: int) -> str:
     if os.path.exists(reservation_path):
         reservation = json.load(open(reservation_path, 'r'))
     reservation_list = reservation.get(str(boss), [])
-    reservation[str(boss_index)] = []
+    reservation[str(boss)] = []
     json.dump(reservation, open(reservation_path, 'w'))
 
     msg = ''
@@ -261,6 +268,10 @@ async def reserve(session: CommandSession, boss: int):
     gid = context['group_id']
     uid = context['user_id']
 
+    clan = battleObj.get_clan(gid)
+    if clan is None:
+        return
+
     msg = add_reserve(gid, uid, boss)
     await session.finish(msg)
 
@@ -269,6 +280,10 @@ async def unreserve(session: CommandSession, boss: int):
     context = session.ctx
     gid = context['group_id']
     uid = context['user_id']
+
+    clan = battleObj.get_clan(gid)
+    if clan is None:
+        return
 
     msg = cancel_reserve(gid, uid, boss)
     await session.finish(msg)
@@ -322,3 +337,29 @@ async def _(session: CommandSession):
 @on_command('取消5', aliases=('取消五', ), permission=permission.GROUP, only_to_me=False)
 async def _(session: CommandSession):
     await unreserve(session, 5)
+
+
+@on_command('预约查询', aliases=('查询预约', ), permission=permission.GROUP, only_to_me=False)
+async def get_reserve(session: CommandSession):
+    gid = session.ctx['group_id']
+    msg = '当前各王预约：'
+    for i in range(1, 6):
+        msg += '\n' + await see_reserve(gid, i)
+
+    await session.finish(msg)
+
+
+@on_command('挂树', aliases=('上树', ), permission=permission.GROUP, only_to_me=False)
+async def up_tree(session: CommandSession):
+    await reserve(session, 0)
+
+
+@on_command('下树', permission=permission.GROUP, only_to_me=False)
+async def down_tree(session: CommandSession):
+    await unreserve(session, 0)
+
+
+@on_command('查树', permission=permission.GROUP, only_to_me=False)
+async def see_tree(session: CommandSession):
+    gid = session.ctx['group_id']
+    await session.finish(await see_reserve(gid, 0))
