@@ -10,7 +10,7 @@ from .battleMaster import BattleMaster
 
 __plugin_name__ = 'clanbattle'
 
-boss_names = ['', '一王', '二王', '三王', '四王', '五王']
+boss_names = ['树上', '一王', '二王', '三王', '四王', '五王']
 reservations_folder = 'reservations'
 if not os.path.exists(reservations_folder):
     os.mkdir(reservations_folder)
@@ -30,6 +30,10 @@ def get_start_of_day() -> datetime:
 
 
 async def get_member_name(gid: int, uid: int) -> str:
+    name = battleObj.get_member_name(gid, uid)
+    if name is not None:
+        return name
+
     member_info = await bot.get_group_member_info(group_id=gid, user_id=uid)
     name = member_info['card'].strip()
     if not name:
@@ -172,3 +176,149 @@ async def handle_rec(context):
         return
 
     await update_rec(gid, uid, dmg)
+
+
+def add_reserve(gid: int, uid: int, boss: int) -> str:
+    # 0：树，1-5：BOSS
+    reservation_path = os.path.join(reservations_folder, f'{gid}.json')
+    reservation = {}
+    if os.path.exists(reservation_path):
+        reservation = json.load(open(reservation_path, 'r'))
+    reservation_list = reservation.get(str(boss), [])
+
+    if uid in reservation_list:
+        if boss == 0:
+            return f'{str(MessageSegment.at(uid))} 你已上树'
+        return f'{str(MessageSegment.at(uid))} 你已预约过{boss_names[boss]}，请勿重复预约'
+    else:
+        reservation_list.append(uid)
+        reservation[str(boss)] = reservation_list
+        json.dump(reservation, open(reservation_path, 'w'))
+
+        if boss == 0:
+            return f'{str(MessageSegment.at(uid))} 成功上树，当前树上人：{len(reservation_list)}'
+        return f'{str(MessageSegment.at(uid))} 你已成功预约{boss_names[boss]}，当前Boss预约人数：{len(reservation_list)}'
+
+
+def cancel_reserve(gid: int, uid: int, boss: int) -> str:
+    reservation_path = os.path.join(reservations_folder, f'{gid}.json')
+    reservation = {}
+    if os.path.exists(reservation_path):
+        reservation = json.load(open(reservation_path, 'r'))
+    reservation_list = reservation.get(str(boss), [])
+
+    if uid in reservation_list:
+        reservation_list.remove(uid)
+        reservation[str(boss)] = reservation_list
+        json.dump(reservation, open(reservation_path, 'w'))
+
+        if boss == 0:
+            return f'{str(MessageSegment.at(uid))} 你已下树'
+        return f'{str(MessageSegment.at(uid))} 已为你取消预约{boss_names[boss]}'
+    else:
+        if boss == 0:
+            return f'{str(MessageSegment.at(uid))} 你尚未上树'
+        return f'{str(MessageSegment.at(uid))} 你尚未预约{boss_names[boss]}'
+
+
+async def see_reserve(gid: int, boss: int) -> list:
+    reservation_path = os.path.join(reservations_folder, f'{gid}.json')
+    reservation = {}
+    if os.path.exists(reservation_path):
+        reservation = json.load(open(reservation_path, 'r'))
+    reservation_list = reservation.get(str(boss), [])
+
+    msg = boss_names[boss] + f' {len(reservation_list)}人'
+    if len(reservation_list) > 0:
+        name_list = []
+        for uid in reservation_list:
+            member_name = await get_member_name(gid, uid)
+            name_list.append(member_name)
+
+        msg += f"：{'、'.join(name_list)}"
+
+    return msg
+
+
+def call_reserve(gid: int, boss: int) -> str:
+    reservation_path = os.path.join(reservations_folder, f'{gid}.json')
+    reservation = {}
+    if os.path.exists(reservation_path):
+        reservation = json.load(open(reservation_path, 'r'))
+    reservation_list = reservation.get(str(boss), [])
+    reservation[str(boss_index)] = []
+    json.dump(reservation, open(reservation_path, 'w'))
+
+    msg = ''
+    for uid in reservation_list:
+        msg += str(MessageSegment.at(uid))
+
+    return msg
+
+
+async def reserve(session: CommandSession, boss: int):
+    context = session.ctx
+    gid = context['group_id']
+    uid = context['user_id']
+
+    msg = add_reserve(gid, uid, boss)
+    await session.finish(msg)
+
+
+async def unreserve(session: CommandSession, boss: int):
+    context = session.ctx
+    gid = context['group_id']
+    uid = context['user_id']
+
+    msg = cancel_reserve(gid, uid, boss)
+    await session.finish(msg)
+
+
+@on_command('预约1', aliases=('预约一', '预约一王'), permission=permission.GROUP, only_to_me=False)
+async def _(session: CommandSession):
+    await reserve(session, 1)
+
+
+@on_command('预约2', aliases=('预约二', '预约二王'), permission=permission.GROUP, only_to_me=False)
+async def _(session: CommandSession):
+    await reserve(session, 2)
+
+
+@on_command('预约3', aliases=('预约三', '预约三王'), permission=permission.GROUP, only_to_me=False)
+async def _(session: CommandSession):
+    await reserve(session, 3)
+
+
+@on_command('预约4', aliases=('预约四', '预约四王'), permission=permission.GROUP, only_to_me=False)
+async def _(session: CommandSession):
+    await reserve(session, 4)
+
+
+@on_command('预约5', aliases=('预约五', '预约五王'), permission=permission.GROUP, only_to_me=False)
+async def _(session: CommandSession):
+    await reserve(session, 5)
+
+
+@on_command('取消1', aliases=('取消一', ), permission=permission.GROUP, only_to_me=False)
+async def _(session: CommandSession):
+    await unreserve(session, 1)
+
+
+@on_command('取消2', aliases=('取消二', ), permission=permission.GROUP, only_to_me=False)
+async def _(session: CommandSession):
+    await unreserve(session, 2)
+
+
+@on_command('取消3', aliases=('取消三', ), permission=permission.GROUP, only_to_me=False)
+async def _(session: CommandSession):
+    await unreserve(session, 3)
+
+
+@on_command('取消4', aliases=('取消四', ), permission=permission.GROUP, only_to_me=False)
+async def _(session: CommandSession):
+    await unreserve(session, 4)
+
+
+@on_command('取消5', aliases=('取消五', ), permission=permission.GROUP, only_to_me=False)
+async def _(session: CommandSession):
+    await unreserve(session, 5)
