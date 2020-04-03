@@ -10,6 +10,8 @@ from .battleMaster import BattleMaster
 
 __plugin_name__ = 'clanbattle'
 
+server_http_adress = 'http://localhost:8000'
+
 boss_names = ['树上', '一王', '二王', '三王', '四王', '五王']
 reservations_folder = 'reservations'
 if not os.path.exists(reservations_folder):
@@ -101,32 +103,44 @@ async def show_report(session: CommandSession):
         return
 
     rec_nums = 0
-    member_info = {}
+    rec_rows = []
+    member_name = {}
     for rec in recs:
         uid, time, r, boss, dmg, flag = [rec[i]
                                          for i in ['uid', 'time', 'round', 'boss', 'dmg', 'flag']]
-
-        if uid not in member_info:
-            name = await get_member_name(gid, uid)
-            member_info[uid] = [name, 0, 0.0]
-
-        member_row = member_info[uid]
         if flag in [0, 2, 3]:
             rec_nums += 1
-            member_row[1] += 1
+
+        value = {'uid': uid, 'time': time,
+                 'round': r, 'boss': boss, 'dmg': dmg}
+
+        if uid not in member_name:
+            name = await get_member_name(gid, uid)
+            member_name[uid] = name
+        name = member_name[uid]
+        value['user_name'] = name
+
         score = battleObj.get_score_rate(r, boss, server) * dmg
-        member_row[2] += score
+        value['score'] = score
 
-        rec_type = ['完整刀', '尾刀', '余刀', '余尾刀'][flag]
         stage = ['A', 'B', 'C', 'D'][battleObj.get_stage(r) - 1]
-        cell = '(%s)%s%s%s %s' % (
-            time[-5:], stage, boss, rec_type, '{:,}'.format(dmg))
+        rec_type = ['完整刀', '尾刀', '余刀', '余尾刀'][flag]
+        value['type'] = stage + str(boss) + rec_type
 
-        member_row.append(cell)
-
-        member_info[uid] = member_row
+        rec_rows.append(value)
 
     msg = '今日已出%s刀。' % (rec_nums, )
+
+    try:
+        file_name = str(gid) + datetime.now().strftime('%Y%m%d%H%M')
+        out_data_path = os.path.join(
+            os.path.dirname(__file__), 'report', file_name + '.json')
+        json.dump(rec_rows, open(out_data_path, 'w',
+                                 encoding='utf-8'), ensure_ascii=False)
+
+        msg += '\n详情：' + server_http_adress + '?' + file_name
+    except:
+        pass
 
     await session.finish(msg)
 
