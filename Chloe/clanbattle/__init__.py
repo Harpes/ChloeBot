@@ -86,6 +86,51 @@ async def show_progress(session: CommandSession):
         await session.finish('当前%d周目%s，剩余血量%s' % (r, boss_names[boss], '{:,}'.format(hp)))
 
 
+@on_command('报告', aliases=('出刀统计', '每日报告'), permission=permission.GROUP, only_to_me=False)
+async def show_report(session: CommandSession):
+    gid = session.ctx['group_id']
+
+    clan = battleObj.get_clan(gid)
+    if clan is None:
+        return
+    server = clan[1]
+
+    recs = battleObj.get_rec(gid, uid=None, time=get_start_of_day())
+    if len(recs) == 0:
+        await session.finish('今日尚无出刀记录。')
+        return
+
+    rec_nums = 0
+    member_info = {}
+    for rec in recs:
+        uid, time, r, boss, dmg, flag = [rec[i]
+                                         for i in ['uid', 'time', 'round', 'boss', 'dmg', 'flag']]
+
+        if uid not in member_info:
+            name = await get_member_name(gid, uid)
+            member_info[uid] = [name, 0, 0.0]
+
+        member_row = member_info[uid]
+        if flag in [0, 2, 3]:
+            rec_nums += 1
+            member_row[1] += 1
+        score = battleObj.get_score_rate(r, boss, server) * dmg
+        member_row[2] += score
+
+        rec_type = ['完整刀', '尾刀', '余刀', '余尾刀'][flag]
+        stage = ['A', 'B', 'C', 'D'][battleObj.get_stage(r) - 1]
+        cell = '(%s)%s%s%s %s' % (
+            time[-5:], stage, boss, rec_type, '{:,}'.format(dmg))
+
+        member_row.append(cell)
+
+        member_info[uid] = member_row
+
+    msg = '今日已出%s刀。' % (rec_nums, )
+
+    await session.finish(msg)
+
+
 def add_rec(gid: int, uid: int, r: int, boss: int, dmg: int, flag: int = 0):
     battleObj.add_rec(gid, uid, r, boss, dmg, flag)
     return battleObj.get_current_state(gid)
