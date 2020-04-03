@@ -59,17 +59,17 @@ async def add_clan(session: CommandSession, server: int):
         await session.finish('创建%s服公会[%s]成功' % (['日', '台', '国'][clan[1]], clan[0]))
 
 
-@on_command('添加日服公会', permission=permission.GROUP_OWNER, shell_like=True, only_to_me=False)
+@on_command('创建日服公会', permission=permission.GROUP_OWNER, shell_like=True, only_to_me=False)
 async def add_clan_jp(session: CommandSession):
     await add_clan(session, 0)
 
 
-@on_command('添加台服公会', permission=permission.GROUP_OWNER, shell_like=True, only_to_me=False)
+@on_command('创建台服公会', permission=permission.GROUP_OWNER, shell_like=True, only_to_me=False)
 async def add_clan_cntw(session: CommandSession):
     await add_clan(session, 1)
 
 
-@on_command('添加国服公会', permission=permission.GROUP_OWNER, shell_like=True, only_to_me=False)
+@on_command('创建国服公会', permission=permission.GROUP_OWNER, shell_like=True, only_to_me=False)
 async def add_clan_cn(session: CommandSession):
     await add_clan(session, 2)
 
@@ -183,6 +183,40 @@ async def handle_rec(context):
         return
 
     await update_rec(gid, uid, dmg)
+
+
+@on_command('撤销', permission=permission.GROUP, only_to_me=False)
+async def undo_rec(session: CommandSession):
+    context = session.ctx
+    gid = context['group_id']
+    uid = context['user_id']
+    auth = context['sender']['role']
+
+    clan = battleObj.get_clan(gid)
+    if clan is None:
+        return
+
+    recs = battleObj.get_rec(gid, uid=None, time=get_start_of_day())
+    if len(recs) == 0:
+        await session.finish('今日尚无出刀记录。')
+        return
+
+    last_rec = recs[-1]
+    recid, last_uid, r, boss, dmg = [last_rec[i]
+                                     for i in ['recid', 'uid', 'round', 'boss', 'dmg']]
+    if last_rec['uid'] != uid and auth == 'member':
+        await session.finish('撤回别人的出刀记录需要管理权限。')
+        return
+
+    u_name = await get_member_name(gid, last_uid)
+
+    msg = '已撤销%s对%s周目%s的%s伤害\n----------\n' % (
+        u_name, r, boss_names[boss], '{:,}'.format(dmg))
+    battleObj.delete_rec(recid)
+    _, r, boss, hp = battleObj.get_current_state(gid)
+    msg += '当前%d周目%s，剩余血量%s' % (r, boss_names[boss], '{:,}'.format(hp))
+
+    await session.finish(msg)
 
 
 def add_reserve(gid: int, uid: int, boss: int) -> str:
