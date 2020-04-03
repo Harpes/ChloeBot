@@ -112,7 +112,7 @@ async def show_report(session: CommandSession):
             rec_nums += 1
 
         value = {'uid': uid, 'time': time,
-                 'round': r, 'boss': boss, 'dmg': dmg}
+                 'round': r, 'boss': boss, 'dmg': dmg, 'flag': flag}
 
         if uid not in member_name:
             name = await get_member_name(gid, uid)
