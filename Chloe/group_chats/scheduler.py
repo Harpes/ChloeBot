@@ -56,10 +56,13 @@ async def _():
     tomorrow = (now + datetime.timedelta(days=1)).strftime(time_formatter)[:10]
 
     for ev in events:
-        start, end, name = ev['start_time'], ev['end_time'], ev['campaign_name']
+        start, end, name, predict = ev['start_time'], ev['end_time'], ev['campaign_name'], ev['isPredict']
+        if predict == '1':
+            continue
 
+        start_time = datetime.datetime.strptime(start, time_formatter)
         end_time = datetime.datetime.strptime(end, time_formatter)
-        if end_time < now:
+        if end_time < now or start_time > (now + datetime.timedelta(days=2)):
             continue
 
         msg_start = ""
