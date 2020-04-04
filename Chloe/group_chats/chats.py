@@ -12,7 +12,7 @@ async def _(context):
     message = context['raw_message']
     group_id = context['group_id']
 
-    if random.randint(0, 100) < 4:
+    if random.randint(0, 100) < 3:
         await bot.send_group_msg(group_id=group_id, message=message)
 
 
