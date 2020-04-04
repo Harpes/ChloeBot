@@ -1,9 +1,3 @@
-const barChart = echarts.init(document.getElementById('bar'));
-const tableElement = document.getElementById('table');
-const tableHead =
-    '<table class="gridtable"><thead><tr><th></th><th>昵称</th><th>出刀</th><th>分数</th></tr></thead><tbody>';
-const tableEnd = '</tbody></table>';
-
 function toThousands(num) {
     var num = (num || 0).toString(),
         result = '';
@@ -67,9 +61,8 @@ request.onload = () => {
             data: userIds.map(uid => names[uid]),
         },
         grid: {
-            left: '5%',
-            right: '5%',
-            bottom: '5%',
+            left: '2%',
+            right: '2%',
             containLabel: true,
         },
         xAxis: [
@@ -81,7 +74,7 @@ request.onload = () => {
         yAxis: [
             {
                 type: 'value',
-                minInterval: 4000000,
+                minInterval: 2000000,
                 axisLabel: { formatter: value => `${value / 10000}w` },
             },
         ],
@@ -89,10 +82,16 @@ request.onload = () => {
             trigger: 'axis',
             axisPointer: { type: 'shadow' },
         },
+        toolbox: { feature: { saveAsImage: {} } },
     };
 
+    const barChart = echarts.init(document.getElementById('bar'));
     barChart.setOption(options);
 
+    const tableElement = document.getElementById('table');
+    const tableHead =
+        '<table class="gridtable"><thead><tr><th></th><th>昵称</th><th>出刀</th><th>分数</th></tr></thead><tbody>';
+    const tableEnd = '</tbody></table>';
     const tableRows = rows
         .sort((a, b) => b[3] - a[3])
         .map(r => {
