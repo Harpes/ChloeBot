@@ -48,7 +48,7 @@ p3 = pFes + percents[2]
 p2 = p3 + percents[3]
 
 
-@on_command('单抽', only_to_me=False)
+@on_command('单抽', aliases=('單抽', ), only_to_me=False)
 async def _(session: CommandSession):
     msg = ''
     if session.ctx['message_type'] == 'group':
@@ -72,7 +72,7 @@ async def _(session: CommandSession):
     await session.send(msg + pic)
 
 
-@on_command('单抽到up', only_to_me=False)
+@on_command('单抽到up', aliases=('單抽到up', ), only_to_me=False)
 async def _(session: CommandSession):
     result = []
     n3, n2, n1 = [0, 0, 0]

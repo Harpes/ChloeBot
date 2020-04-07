@@ -132,3 +132,4 @@ dmypy.json
 reservations/
 Chloe/clanbattle/report/*.json
 *.exe
+.vscode/settings.json
