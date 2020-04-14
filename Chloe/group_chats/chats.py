@@ -39,26 +39,26 @@ async def decrease(session: NoticeSession):
 
 @on_command('前卫rank')
 async def _(session: CommandSession):
-    path = os.path.join(os.path.dirname(__file__), "RF.png")
-    await session.send(f'[CQ:image,file=file:///{path}]')
+    path = os.path.join(os.path.dirname(__file__), "RF.jpeg")
+    await session.send(f'R15-5\n建議會戰攻擊角第5件都不穿[CQ:image,file=file:///{path}]')
 
 
 @on_command('中卫rank')
 async def _(session: CommandSession):
-    path = os.path.join(os.path.dirname(__file__), "RM.png")
-    await session.send(f'[CQ:image,file=file:///{path}]')
+    path = os.path.join(os.path.dirname(__file__), "RM.jpeg")
+    await session.send(f'R15-5\n建議會戰攻擊角第5件都不穿[CQ:image,file=file:///{path}]')
 
 
 @on_command('后卫rank')
 async def _(session: CommandSession):
-    path = os.path.join(os.path.dirname(__file__), "RB.png")
-    await session.send(f'[CQ:image,file=file:///{path}]')
+    path = os.path.join(os.path.dirname(__file__), "RB.jpeg")
+    await session.send(f'R15-5\n建議會戰攻擊角第5件都不穿[CQ:image,file=file:///{path}]')
 
 
 @on_command('rank')
 async def _(session: CommandSession):
     path = os.path.join(os.path.dirname(__file__), "15-4Rank.jpg")
-    await session.send(f'[CQ:image,file=file:///{path}]')
+    await session.send(f'R15-4[CQ:image,file=file:///{path}]')
 
 
 @on_command('黄骑充电')
