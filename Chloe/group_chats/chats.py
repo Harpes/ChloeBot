@@ -57,8 +57,8 @@ async def _(session: CommandSession):
 
 @on_command('rank')
 async def _(session: CommandSession):
-    path = os.path.join(os.path.dirname(__file__), "15-4Rank.jpg")
-    await session.send(f'R15-4[CQ:image,file=file:///{path}]')
+    path = os.path.join(os.path.dirname(__file__), "Rank.jpg")
+    await session.send(f'煌灵R15-5[CQ:image,file=file:///{path}]')
 
 
 @on_command('黄骑充电')
