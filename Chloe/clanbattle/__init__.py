@@ -271,7 +271,7 @@ async def undo_rec(session: CommandSession):
 
     msg = '已撤销%s对%s周目%s的%s伤害\n----------\n' % (
         u_name, r, boss_names[boss], '{:,}'.format(dmg))
-    battleObj.delete_rec(recid)
+    battleObj.delete_rec(gid, recid)
     _, r, boss, hp = battleObj.get_current_state(gid)
     msg += '当前%d周目%s，剩余血量%s' % (r, boss_names[boss], '{:,}'.format(hp))
 
