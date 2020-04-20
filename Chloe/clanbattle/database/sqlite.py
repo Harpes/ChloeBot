@@ -122,7 +122,7 @@ class DataBaseIO(object):
 
         return result
 
-    def delRec(self, recid: int):
+    def delRec(self, gid: int, recid: int):
         conn, month = self._createRecs(gid)
 
         delete_sql = 'DELETE FROM rec%s WHERE recid = %s' % (month, recid)

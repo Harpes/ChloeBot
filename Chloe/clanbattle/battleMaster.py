@@ -102,5 +102,5 @@ class BattleMaster(object):
     def add_rec(self, gid: int, uid: int, r: int, boss: int, dmg: int, flag: int):
         self.databaseObj.addRec(gid, uid, r, boss, dmg, flag)
 
-    def delete_rec(self, recid: int):
-        self.databaseObj.delRec(recid)
+    def delete_rec(self, gid: int, recid: int):
+        self.databaseObj.delRec(gid, recid)
