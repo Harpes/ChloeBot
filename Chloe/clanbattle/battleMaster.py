@@ -95,7 +95,6 @@ class BattleMaster(object):
     def get_rec(self, gid: int, uid: int = None, time: datetime = None) -> list:
         rec_cols = ['recid', 'gid', 'uid', 'time',
                     'round', 'boss', 'dmg', 'flag']
-
         recs = self.databaseObj.getRec(gid, uid, time)
         return [dict(zip(rec_cols, i)) for i in recs]
 
@@ -104,3 +103,8 @@ class BattleMaster(object):
 
     def delete_rec(self, gid: int, recid: int):
         self.databaseObj.delRec(gid, recid)
+
+    def clear_rec(self, gid: int):
+        recs = self.get_rec(gid)
+        for r in recs:
+            self.delete_rec(gid, r['recid'])

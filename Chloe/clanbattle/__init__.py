@@ -2,6 +2,7 @@ import json
 import os
 import re
 from datetime import datetime, timedelta
+from random import choices
 
 import nonebot
 from nonebot import CommandSession, MessageSegment, on_command, permission
@@ -276,6 +277,18 @@ async def undo_rec(session: CommandSession):
     msg += '当前%d周目%s，剩余血量%s' % (r, boss_names[boss], '{:,}'.format(hp))
 
     await session.finish(msg)
+
+
+psw = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'
+psw = ''.join(choices(psw, k=6))
+@on_command('清空会战记录', aliases=('清除会战记录', '重置进度', '重置会战进度'), permission=permission.GROUP_OWNER | permission.GROUP_ADMIN, only_to_me=False)
+async def clear_rec(session: CommandSession):
+    msg = session.get('message', prompt=f'请回复[{psw}]以重置会战进度').strip()
+    if msg == psw:
+        gid = session.ctx['group_id']
+        battleObj.clear_rec(gid)
+
+        await show_progress(session)
 
 
 def add_reserve(gid: int, uid: int, boss: int) -> str:
