@@ -11,7 +11,7 @@ function toThousands(num) {
     return result;
 }
 
-const jsonUrl = window.location.search.slice(1) + '.json';
+const jsonUrl = 'data/' + window.location.search.slice(1) + '.json';
 const request = new XMLHttpRequest();
 request.open('get', jsonUrl);
 request.send(null);
@@ -42,7 +42,9 @@ request.onload = () => {
         ] += dmg;
 
         const row = [...rows[userIds.indexOf(uid)]];
-        if (flag !== 1) row[2] += 1;
+        // if (flag !== 1) row[2] += 1;
+        if (flag === 0) row[2] += 1;
+        else row[2] += 0.5;
         row[3] += score;
         row.push(`(${time.slice(-5)})${type} ${toThousands(dmg)}`);
         rows[userIds.indexOf(uid)] = [...row];
@@ -90,7 +92,7 @@ request.onload = () => {
 
     const tableElement = document.getElementById('table');
     const tableHead =
-        '<table class="gridtable"><thead><tr><th></th><th>昵称</th><th>出刀</th><th>分数</th></tr></thead><tbody>';
+        '<table class="gridtable"><thead><tr><th></th><th></th><th>昵称</th><th>出刀</th><th>分数</th></tr></thead><tbody>';
     const tableEnd = '</tbody></table>';
     const tableRows = rows
         .sort((a, b) => b[3] - a[3])
@@ -98,7 +100,12 @@ request.onload = () => {
             r[3] = toThousands(parseInt(r[3]));
             return r;
         })
-        .map(r => `<tr>${r.map(c => `<td>${c}</td>`).join('')}</tr>`)
+        .map(
+            (r, i) =>
+                `<tr><td>${i + 1}</td>${r
+                    .map(c => `<td>${c}</td>`)
+                    .join('')}</tr>`
+        )
         .join('');
     tableElement.innerHTML = tableHead + tableRows + tableEnd;
 };
