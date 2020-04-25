@@ -130,6 +130,6 @@ dmypy.json
 *.db
 .DS_Store
 reservations/
-Chloe/clanbattle/report/*.json
+Chloe/clanbattle/report/data/*.json
 *.exe
 .vscode/settings.json
