@@ -11,7 +11,37 @@ function toThousands(num) {
     return result;
 }
 
-const jsonUrl = window.location.search.slice(1) + '.json';
+function renderItem(params, api) {
+    const [index, start, end, dmg] = [0, 1, 2, 3].map(i => api.value(i));
+    const x = api.coord([index, start])[0];
+    const y = api.coord([index, end])[1];
+    const [width, height] = api.size([1, -dmg]);
+
+    const rectShape = echarts.graphic.clipRectByRect(
+        {
+            x: x - width * 0.3,
+            y,
+            width: width * 0.6,
+            height,
+        },
+        {
+            x: params.coordSys.x,
+            y: params.coordSys.y,
+            width: params.coordSys.width,
+            height: params.coordSys.height,
+        }
+    );
+
+    return (
+        rectShape && {
+            type: 'rect',
+            shape: rectShape,
+            style: api.style(),
+        }
+    );
+}
+
+const jsonUrl = 'data/' + window.location.search.slice(1) + '.json';
 const request = new XMLHttpRequest();
 request.open('get', jsonUrl);
 request.send(null);
@@ -31,28 +61,43 @@ request.onload = () => {
     });
 
     const category = Array.from(categoriesSet);
-    const nullValues = new Array(category.length).fill(null);
     const userIds = Array.from(uidSet);
-    const datas = userIds.map(_ => [...nullValues]);
+    const datas = userIds.map(_ => []);
     const rows = userIds.map(uid => [uid, names[uid], 0, 0]);
 
+    let lastBoss = '';
+    let dmgStack = 0;
     records.forEach(({ uid, round, dmg, type, score, flag, time }) => {
-        datas[userIds.indexOf(uid)][
-            category.indexOf(`${round}周目${type.slice(0, 2)}`)
-        ] += dmg;
+        const bossName = `${round}周目${type.slice(0, 2)}`;
+        if (lastBoss !== bossName) {
+            lastBoss = bossName;
+            dmgStack = 0;
+        }
+        datas[userIds.indexOf(uid)].push([
+            category.indexOf(bossName),
+            dmgStack,
+            dmg + dmgStack,
+            dmg,
+        ]);
+        dmgStack += dmg;
 
         const row = [...rows[userIds.indexOf(uid)]];
-        if (flag !== 1) row[2] += 1;
+
+        if (flag === 0) row[2] += 1;
+        else row[2] += 0.5;
+
         row[3] += score;
+
         row.push(`(${time.slice(-5)})${type} ${toThousands(dmg)}`);
         rows[userIds.indexOf(uid)] = [...row];
     });
 
     const series = userIds.map((uid, uindex) => ({
         name: names[uid],
-        type: 'bar',
-        stack: 'dmg',
+        type: 'custom',
         data: datas[uindex],
+        encode: { x: 0, y: [1, 2], tooltip: 3 },
+        renderItem,
     }));
 
     const options = {
@@ -74,8 +119,9 @@ request.onload = () => {
         yAxis: [
             {
                 type: 'value',
-                minInterval: 2000000,
                 axisLabel: { formatter: value => `${value / 10000}w` },
+                min: 0,
+                max: value => Math.max(value.max, 15000000),
             },
         ],
         tooltip: {
@@ -90,7 +136,7 @@ request.onload = () => {
 
     const tableElement = document.getElementById('table');
     const tableHead =
-        '<table class="gridtable"><thead><tr><th></th><th>昵称</th><th>出刀</th><th>分数</th></tr></thead><tbody>';
+        '<table class="gridtable"><thead><tr><th></th><th></th><th>昵称</th><th>出刀</th><th>分数</th></tr></thead><tbody>';
     const tableEnd = '</tbody></table>';
     const tableRows = rows
         .sort((a, b) => b[3] - a[3])
@@ -98,7 +144,12 @@ request.onload = () => {
             r[3] = toThousands(parseInt(r[3]));
             return r;
         })
-        .map(r => `<tr>${r.map(c => `<td>${c}</td>`).join('')}</tr>`)
+        .map(
+            (r, i) =>
+                `<tr><td>${i + 1}</td>${r
+                    .map(c => `<td>${c}</td>`)
+                    .join('')}</tr>`
+        )
         .join('');
     tableElement.innerHTML = tableHead + tableRows + tableEnd;
 };
