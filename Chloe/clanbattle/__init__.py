@@ -221,7 +221,7 @@ async def handle_rec(context):
 
     dmg = 0
 
-    dmg_report1 = re.match(r'^报刀 ?(\d+) *$', message)
+    dmg_report1 = re.match(r'^[报報]刀 ?(\d+) *$', message)
     dmg_report2 = re.match(r'^(?:\[CQ:at,qq=(\d+)\]) ?(\d+) *$', message)
     kill_report1 = re.match(r'^尾刀 ?(?:\[CQ:at,qq=(\d+)\])? *$', message)
     kill_report2 = re.match(r'^(?:\[CQ:at,qq=(\d+)\]) ?尾刀$', message)
