@@ -133,3 +133,4 @@ reservations/
 Chloe/clanbattle/report/data/*.json
 *.exe
 .vscode/settings.json
+res
