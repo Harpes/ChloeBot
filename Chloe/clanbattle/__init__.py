@@ -103,14 +103,23 @@ async def show_report(session: CommandSession):
         await session.finish('今日尚无出刀记录。')
         return
 
-    rec_nums = 0
+    # 整刀数 尾刀数
+    whole_nums, half_nums = 0, 0
     rec_rows = []
     member_name = {}
     for rec in recs:
-        uid, time, r, boss, dmg, flag = [rec[i]
-                                         for i in ['uid', 'time', 'round', 'boss', 'dmg', 'flag']]
-        if flag in [0, 2, 3]:
-            rec_nums += 1
+        uid, time, r, boss, dmg, flag = [rec[i] for i in [
+            'uid', 'time', 'round', 'boss', 'dmg', 'flag']]
+
+        # if flag in [0, 2, 3]:
+        #     rec_nums += 1
+        if flag == 0:
+            whole_nums += 1
+        elif flag == 1:
+            half_nums += 1
+        else:
+            whole_nums += 1
+            half_nums -= 1
 
         value = {'uid': uid, 'time': time,
                  'round': r, 'boss': boss, 'dmg': dmg, 'flag': flag}
@@ -130,17 +139,20 @@ async def show_report(session: CommandSession):
 
         rec_rows.append(value)
 
-    msg = '今日已出%s刀。' % (rec_nums, )
+    msg = '今日已出%s完整刀。' % (whole_nums, )
+    if half_nums != 0:
+        msg = msg.replace("。", "，%s尾刀。" % (half_nums, ))
 
     try:
-        file_name = str(gid) + datetime.now().strftime('%Y%m%d%H%M')
+        file_name = str(gid) + datetime.now().strftime('%m%d%H')
         out_data_path = os.path.join(
-            os.path.dirname(__file__), 'report', file_name + '.json')
+            os.path.dirname(__file__), 'report', 'data', file_name + '.json')
         json.dump(rec_rows, open(out_data_path, 'w',
                                  encoding='utf-8'), ensure_ascii=False)
 
         msg += '\n详情：' + server_http_adress + '?' + file_name
     except:
+        print('some err happened')
         pass
 
     await session.finish(msg)
@@ -279,7 +291,7 @@ async def undo_rec(session: CommandSession):
     await session.finish(msg)
 
 
-psw = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'
+psw = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'
 psw = ''.join(choices(psw, k=6))
 @on_command('清空会战记录', aliases=('清除会战记录', '重置进度', '重置会战进度'), permission=permission.GROUP_OWNER | permission.GROUP_ADMIN, only_to_me=False)
 async def clear_rec(session: CommandSession):
