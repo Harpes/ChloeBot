@@ -7,8 +7,8 @@ from nonebot import CommandSession, on_command
 from PIL import Image
 
 imgRoot = os.path.join(os.path.dirname(__file__), 'image')
-if not os.path.exists(imgRoot + '\\out'):
-    os.mkdir(imgRoot + '\\out')
+if not os.path.exists(os.path.join(imgRoot, 'out')):
+    os.mkdir(os.path.join(imgRoot, 'out'))
 
 
 gacya3 = ['杏奈', '真步', '璃乃',
@@ -19,7 +19,7 @@ gacya3 = ['杏奈', '真步', '璃乃',
           '莫妮卡', '流夏', '吉塔',
           '亞里莎', '安', '古蕾婭',
           '空花（大江戶）', '妮諾（大江戶）', '碧（插班生）',
-          '克蘿依', '露娜', '嘉夜']
+          '克蘿依', '露娜', '嘉夜', 'イリヤ（クリスマス）']
 
 gacya2 = ['茉莉', '茜里', '宮子',
           '雪', '七七香', '美里',
@@ -33,19 +33,21 @@ gacya1 = ['日和', '怜', '禊', '胡桃', '依里', '鈴莓', '優花梨', '�
 
 gacyaFes = ['矛依未', '克莉絲提娜', '似似花']
 
-gacyaUp = ['イリヤ（クリスマス）']
+gacyaUp = ['キャル（ニューイヤー）']
 
 stones = [50, 10, 1]
 
 # up, FES, 3星, 2星
-# percents = [0.7, 0, 1.8, 20.5]  # 普通
-percents = [1.4, 0, 3.6, 18]  # up双倍
+percents = [0.7, 0, 1.8, 20.5]  # 普通
+# percents = [1.4, 0, 3.6, 18]  # up双倍
 # percents = [0.7, 0.6, 4.3, 18]  # FES三星双倍
 
 pUp = percents[0]
 pFes = pUp + percents[1]
 p3 = pFes + percents[2]
 p2 = p3 + percents[3]
+
+img_size = 72
 
 
 @on_command('单抽', aliases=('單抽', ), only_to_me=False)
@@ -103,15 +105,16 @@ async def _(session: CommandSession):
 
     msg += f'花费{n3 + n2 + n1}抽，获得{n3 * stones[0] + n2 * stones[1] + n1 * stones[2]}个无名之石'
 
-    width = 6 * 128 if n3 > 5 else n3 * 128
-    height = math.ceil(n3 / 6) * 128
-    background = Image.new('RGBA', (width, height))
+    row_nums = math.ceil(pow(n3, 0.5))
+    width = row_nums * img_size
+    height = math.ceil(n3 / row_nums) * img_size
+    background = Image.new('RGB', (width, height), 'white')
     name = session.ctx['user_id']
     for index, cha in enumerate(result):
-        pic = Image.open(f'{imgRoot}\\{cha}.png')
-        col = index % 6
-        row = index // 6
-        background.paste(pic, (col * 128, row * 128))
+        pic = Image.open(f'{imgRoot}\\{cha}.png').resize((img_size, img_size))
+        col = index % row_nums
+        row = index // row_nums
+        background.paste(pic, (col * img_size, row * img_size))
     background.save(imgRoot + f'\\out\\{name}.png', quality=100)
     msg += f'\n[CQ:image,file=file:///{imgRoot}\\out\\{name}.png]'
 
@@ -120,7 +123,7 @@ async def _(session: CommandSession):
     await session.send(msg)
 
 
-@on_command('十连抽', only_to_me=False)
+@on_command('十连抽', aliases=('十連抽', ), only_to_me=False)
 async def _(session: CommandSession):
     result = []
     n3, n2, n1 = [0, 0, 0]
@@ -155,13 +158,14 @@ async def _(session: CommandSession):
 
     msg += f'获得{n3 * stones[0] + n2 * stones[1] + n1 * stones[2]}个无名之石'
 
-    background = Image.new('RGBA', (640, 256))
+    background = Image.new('RGB', (img_size * 5, img_size * 2), 'white')
     name = session.ctx['user_id']
     a = 0
     for x in range(5):
         for y in range(2):
-            pic = Image.open(f'{imgRoot}\\{result[a]}.png')
-            background.paste(pic, (x * 128, y * 128))
+            pic = Image.open(f'{imgRoot}\\{result[a]}.png').resize(
+                (img_size, img_size))
+            background.paste(pic, (x * img_size, y * img_size))
             a += 1
     background.save(imgRoot + f'\\out\\{name}.png', quality=100)
     msg += f'[CQ:image,file=file:///{imgRoot}\\out\\{name}.png]'
@@ -204,15 +208,16 @@ async def _(session: CommandSession):
 
     msg += f'花费{n3 + n2 + n1}抽，获得{n3 * stones[0] + n2 * stones[1] + n1 * stones[2]}个无名之石'
 
-    width = 6 * 128 if n3 > 5 else n3 * 128
-    height = math.ceil(n3 / 6) * 128
-    background = Image.new('RGBA', (width, height))
+    row_nums = math.ceil(pow(n3, 0.5))
+    width = row_nums * img_size
+    height = math.ceil(n3 / row_nums) * img_size
+    background = Image.new('RGB', (width, height), 'white')
     name = session.ctx['user_id']
     for index, cha in enumerate(result):
-        pic = Image.open(f'{imgRoot}\\{cha}.png')
-        col = index % 6
-        row = index // 6
-        background.paste(pic, (col * 128, row * 128))
+        pic = Image.open(f'{imgRoot}\\{cha}.png').resize((img_size, img_size))
+        col = index % row_nums
+        row = index // row_nums
+        background.paste(pic, (col * img_size, row * img_size))
     background.save(imgRoot + f'\\out\\{name}.png', quality=100)
     msg += f'\n[CQ:image,file=file:///{imgRoot}\\out\\{name}.png]'
 
@@ -254,15 +259,16 @@ async def _(session: CommandSession):
 
     msg += f'花费{n3 + n2 + n1}抽，获得{n3 * stones[0] + n2 * stones[1] + n1 * stones[2]}个无名之石'
 
-    width = 6 * 128 if n3 > 5 else n3 * 128
-    height = math.ceil(n3 / 6) * 128
-    background = Image.new('RGBA', (width, height))
+    row_nums = math.ceil(pow(n3, 0.5))
+    width = row_nums * img_size
+    height = math.ceil(n3 / row_nums) * img_size
+    background = Image.new('RGB', (width, height), 'white')
     name = session.ctx['user_id']
     for index, cha in enumerate(result):
-        pic = Image.open(f'{imgRoot}\\{cha}.png')
-        col = index % 6
-        row = index // 6
-        background.paste(pic, (col * 128, row * 128))
+        pic = Image.open(f'{imgRoot}\\{cha}.png').resize((img_size, img_size))
+        col = index % row_nums
+        row = index // row_nums
+        background.paste(pic, (col * img_size, row * img_size))
     background.save(imgRoot + f'\\out\\{name}.png', quality=100)
     msg += f'\n[CQ:image,file=file:///{imgRoot}\\out\\{name}.png]'
 
