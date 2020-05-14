@@ -4,7 +4,7 @@ import os
 import random as rd
 
 import nonebot
-from nonebot import CommandSession, on_command
+from nonebot import CommandSession, on_command, permission
 from PIL import Image
 
 from .chara import gen_chara_avatar
@@ -13,26 +13,37 @@ imgOut = os.path.join(os.path.dirname(__file__), 'out')
 if not os.path.exists(imgOut):
     os.mkdir(imgOut)
 
-config = json.load(
-    open(os.path.join(os.path.dirname(__file__), 'gacya.json'), 'r', encoding='utf8'))
-gacyaUp = config['gacyaUp']
-gacyaFes = config['gacyaFes']
-gacya3 = config['gacya3']
-gacya2 = config['gacya2']
-gacya1 = config['gacya1']
 
-percents = [config['pUp'], config['pFes'], config['p3'], config['p2']]
-pUp = percents[0]
-pFes = pUp + percents[1]
-p3 = pFes + percents[2]
-p2 = p3 + percents[3]
+def load_gacya_config():
+    config = json.load(
+        open(os.path.join('config', 'gacya.json'), 'r', encoding='utf8'))
+
+    percents = [config['pUp'], config['pFes'], config['p3'], config['p2']]
+    pUp = percents[0]
+    pFes = pUp + percents[1]
+    p3 = pFes + percents[2]
+    p2 = p3 + percents[3]
+
+    return [config['gacyaUp'], config['gacyaFes'], config['gacya3'], config['gacya2'], config['gacya1'], pUp, pFes, p3, p2]
+
+
+def edit_gacya_config(key: str, value):
+    config = json.load(
+        open(os.path.join('config', 'gacya.json'), 'r', encoding='utf8'))
+
+    config[key] = value
+    json.dump(config, open(os.path.join(
+        'config', 'gacya.json'), 'w', encoding='utf8'), ensure_ascii=False)
+
 
 stones = [50, 10, 1]
-img_size = 72
+img_size = 60
 
 
 @on_command('单抽', aliases=('單抽', ), only_to_me=False)
 async def _(session: CommandSession):
+    gacyaUp, gacyaFes, gacya3, gacya2, gacya1, pUp, pFes, p3, p2 = load_gacya_config()
+
     msg = ''
     if session.ctx['message_type'] == 'group':
         msg = '[CQ:at,qq={}] '.format(str(session.ctx['user_id']))
@@ -56,6 +67,8 @@ async def _(session: CommandSession):
 
 @on_command('单抽到up', aliases=('單抽到up', ), only_to_me=False)
 async def _(session: CommandSession):
+    gacyaUp, gacyaFes, gacya3, _, _, pUp, pFes, p3, p2 = load_gacya_config()
+
     result = []
     n3, n2, n1 = [0, 0, 0]
 
@@ -105,6 +118,8 @@ async def _(session: CommandSession):
 
 @on_command('十连抽', aliases=('十連抽', ), only_to_me=False)
 async def _(session: CommandSession):
+    gacyaUp, gacyaFes, gacya3, gacya2, gacya1, pUp, pFes, p3, p2 = load_gacya_config()
+
     result = []
     n3, n2, n1 = [0, 0, 0]
 
@@ -155,6 +170,8 @@ async def _(session: CommandSession):
 
 @on_command('抽到up', only_to_me=False)
 async def _(session: CommandSession):
+    gacyaUp, gacyaFes, gacya3, _, _, pUp, pFes, p3, p2 = load_gacya_config()
+
     result = []
     n3, n2, n1 = [0, 0, 0]
 
@@ -208,6 +225,8 @@ async def _(session: CommandSession):
 
 @on_command('抽一井', only_to_me=False)
 async def _(session: CommandSession):
+    gacyaUp, gacyaFes, gacya3, _, _, pUp, pFes, p3, p2 = load_gacya_config()
+
     result = []
     n3, n2, n1 = [0, 0, 0]
 
@@ -255,3 +274,19 @@ async def _(session: CommandSession):
     msg += f'\n共计{n3}个三星，{n2}个两星，{n1}个一星'
 
     await session.send(msg)
+
+
+@on_command('修改up', permission=permission.SUPERUSER, shell_like=True, only_to_me=False)
+async def _(session: CommandSession):
+    chars = session.argv
+    if len(chars) == 0:
+        session.finish('未输入角色。')
+
+    edit_gacya_config('gacyaUp', chars)
+
+    background = Image.new('RGB', (len(chars) * img_size, img_size), 'white')
+    for index, cha in enumerate(chars):
+        pic = gen_chara_avatar(cha, 3).resize((img_size, img_size))
+        background.paste(pic, (index * img_size, 0))
+    background.save(os.path.join(imgOut, 's.png'))
+    await session.finish('Up角色已修改为\n' + f'[CQ:image,file=file:///{os.path.join(imgOut, "s.png")}]')
