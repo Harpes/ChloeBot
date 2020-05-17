@@ -6,4 +6,8 @@ pcr 公会战特化的 QQ 机器人
 
 ## 快速指南 - QuickStart
 
-冇(Todo)
+### 需要的python库
+- Nonebot
+- ...
+### 需要的软件
+- Caddy

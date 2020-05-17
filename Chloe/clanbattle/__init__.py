@@ -18,6 +18,11 @@ reservations_folder = 'reservations'
 if not os.path.exists(reservations_folder):
     os.mkdir(reservations_folder)
 
+data_folder = os.path.join(
+            os.path.dirname(__file__), 'report', 'data')
+if not os.path.exists(data_folder):
+    os.mkdir(data_folder)
+
 bot = nonebot.get_bot()
 battleObj = BattleMaster()
 
@@ -47,7 +52,10 @@ async def get_member_name(gid: int, uid: int) -> str:
 
 async def add_clan(session: CommandSession, server: int):
     gid = session.ctx['group_id']
-    name = session.argv[0] or str(gid)
+    try:
+        name = session.argv[0]
+    except Exception:
+        name = str(gid)
 
     clan = battleObj.get_clan(gid)
     if clan is None:
@@ -151,8 +159,8 @@ async def show_report(session: CommandSession):
                                  encoding='utf-8'), ensure_ascii=False)
 
         msg += '\n详情：' + server_http_adress + '?' + file_name
-    except:
-        print('some err happened')
+    except Exception as e:
+        print(e)
         pass
 
     await session.finish(msg)
@@ -192,6 +200,10 @@ async def update_rec(gid: int, uid: int, dmg: int):
         flag = rec['flag']
         if flag in [0, 2, 3]:
             member_today_rec_nums += 1
+
+    if member_today_rec_nums >= 3:
+        await bot.send_group_msg(group_id=gid, message='你今天已经报满三刀了')
+        return
 
     dmg_type, new_flag = '完整刀', rec_type
     if flag in [0, 2, 3]:

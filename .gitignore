@@ -134,3 +134,4 @@ Chloe/clanbattle/report/data/*.json
 *.exe
 .vscode/settings.json
 res
+Chloe/clanbattle/report/data
