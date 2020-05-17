@@ -69,6 +69,9 @@ async def _(session: CommandSession):
 async def _(session: CommandSession):
     gacyaUp, gacyaFes, gacya3, _, _, pUp, pFes, p3, p2 = load_gacya_config()
 
+    if pUp == 0:
+        session.finish('当前没有开放up角色')
+
     result = []
     n3, n2, n1 = [0, 0, 0]
 
@@ -171,6 +174,9 @@ async def _(session: CommandSession):
 @on_command('抽到up', only_to_me=False)
 async def _(session: CommandSession):
     gacyaUp, gacyaFes, gacya3, _, _, pUp, pFes, p3, p2 = load_gacya_config()
+
+    if pUp == 0:
+        session.finish('当前没有开放up角色')
 
     result = []
     n3, n2, n1 = [0, 0, 0]
