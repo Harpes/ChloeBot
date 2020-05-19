@@ -19,7 +19,7 @@ if not os.path.exists(reservations_folder):
     os.mkdir(reservations_folder)
 
 data_folder = os.path.join(
-            os.path.dirname(__file__), 'report', 'data')
+    os.path.dirname(__file__), 'report', 'data')
 if not os.path.exists(data_folder):
     os.mkdir(data_folder)
 
