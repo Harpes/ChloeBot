@@ -138,6 +138,7 @@ CHARA = {
 }
 
 gadget_star = Image.open(path.join(res_path, 'gadget', 'star.png'))
+gadget_pink = Image.open(path.join(res_path, 'gadget', 'star_pink.png'))
 # gadget_star_dis = Image.open(
 #     path.join(res_path, 'gadget', 'start_disabled.png'))
 chara_unknown = Image.open(path.join(res_path, 'unit', 'icon_unit_100031.png'))
@@ -158,6 +159,14 @@ for k, l in CHARA.items():
             print(f'出现重名{n}于id{k}与id{NAME2ID[n]}')
 
 
+def get_chara_id(name: str) -> int:
+    return NAME2ID.get(normname(name), 1000)
+
+
+def get_chara_name(id_: int) -> str:
+    return CHARA.get(id_, ['未知角色'])[0]
+
+
 def get_chara_icon(name: str, star: int = 3) -> Image:
     chara_name = normname(name)
     if chara_name not in NAME2ID:
@@ -165,7 +174,13 @@ def get_chara_icon(name: str, star: int = 3) -> Image:
         return chara_unknown
 
     id_ = NAME2ID[chara_name]
-    stage = 6 if star > 5 else 3 if star > 2 else 1
+    stage = 3
+    if star == 6:
+        stage = 6
+    elif star > 2:
+        stage = 3
+    elif star > 0:
+        stage = 1
     img_path = path.join(res_path, 'unit', f'icon_unit_{id_}{stage}1.png')
     if path.exists(img_path):
         return Image.open(img_path)
@@ -174,7 +189,8 @@ def get_chara_icon(name: str, star: int = 3) -> Image:
         return chara_unknown
 
 
-def gen_chara_avatar(name: str, star: int = 3) -> Image:
+def gen_chara_avatar(name: str, star: int = 3, equip: bool = False) -> Image:
+    # TODO: 添加专武显示
     icon = get_chara_icon(name, star)
     size = icon.size[0]
 
@@ -182,10 +198,16 @@ def gen_chara_avatar(name: str, star: int = 3) -> Image:
     star_lap = round(l * 0.15)
     margin_x = (size - 6 * l) // 2
     margin_y = round(size * 0.05)
-    star_icon = gadget_star.resize((l, l))
-    for i in range(star):
-        x = i * (l - star_lap) + margin_x
+    if star == 6:
+        star_icon = gadget_pink.resize((l, l))
+        x = margin_x
         y = size - l - margin_y
         icon.paste(star_icon, (x, y, x + l, y + l), star_icon)
+    else:
+        star_icon = gadget_star.resize((l, l))
+        for i in range(star):
+            x = i * (l - star_lap) + margin_x
+            y = size - l - margin_y
+            icon.paste(star_icon, (x, y, x + l, y + l), star_icon)
 
     return icon
