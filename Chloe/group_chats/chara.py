@@ -139,6 +139,7 @@ CHARA = {
 
 gadget_star = Image.open(path.join(res_path, 'gadget', 'star.png'))
 gadget_pink = Image.open(path.join(res_path, 'gadget', 'star_pink.png'))
+gadget_equip = Image.open(path.join(res_path, 'gadget', 'equip.png'))
 # gadget_star_dis = Image.open(
 #     path.join(res_path, 'gadget', 'start_disabled.png'))
 chara_unknown = Image.open(path.join(res_path, 'unit', 'icon_unit_100031.png'))
@@ -170,7 +171,7 @@ def get_chara_name(id_: int) -> str:
 def get_chara_icon(name: str, star: int = 3) -> Image:
     chara_name = normname(name)
     if chara_name not in NAME2ID:
-        print(f'{name} 图片文件未找到')
+        print(f'{name} 名字未找到')
         return chara_unknown
 
     id_ = NAME2ID[chara_name]
@@ -190,7 +191,6 @@ def get_chara_icon(name: str, star: int = 3) -> Image:
 
 
 def gen_chara_avatar(name: str, star: int = 3, equip: bool = False) -> Image:
-    # TODO: 添加专武显示
     icon = get_chara_icon(name, star)
     size = icon.size[0]
 
@@ -198,6 +198,7 @@ def gen_chara_avatar(name: str, star: int = 3, equip: bool = False) -> Image:
     star_lap = round(l * 0.15)
     margin_x = (size - 6 * l) // 2
     margin_y = round(size * 0.05)
+
     if star == 6:
         star_icon = gadget_pink.resize((l, l))
         x = margin_x
@@ -209,5 +210,11 @@ def gen_chara_avatar(name: str, star: int = 3, equip: bool = False) -> Image:
             x = i * (l - star_lap) + margin_x
             y = size - l - margin_y
             icon.paste(star_icon, (x, y, x + l, y + l), star_icon)
+
+    if equip:
+        l = round(l * 1.5)
+        equip_icon = gadget_equip.resize((l, l))
+        icon.paste(equip_icon, (margin_x, margin_x,
+                                margin_x + l, margin_x + l), equip_icon)
 
     return icon

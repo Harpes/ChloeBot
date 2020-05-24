@@ -65,7 +65,7 @@ async def search_arena(session: CommandSession, region: int = 3):
         print('\n\n', res, '\n\n')
         session.finish('服务器返回数据错误，请联系开发人员')
 
-    resolutions = res['data']['result'][:5]
+    resolutions = res['data']['result'][:7]
     nums = len(resolutions)
     if nums < 1:
         session.finish('没有找到解法，请随意解决', at_sender=True)
