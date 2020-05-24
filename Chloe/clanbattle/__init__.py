@@ -37,6 +37,14 @@ def get_start_of_day() -> datetime:
         return start - timedelta(days=1)
 
 
+def translate_time_str(value: datetime, f: str = '%Y%m%d%H%M') -> str:
+    return value.strftime(f)
+
+
+def translate_str_time(value: str, f: str = '%Y%m%d%H%M') -> str:
+    return datetime.strptime(value, f)
+
+
 async def get_member_name(gid: int, uid: int) -> str:
     name = battleObj.get_member_name(gid, uid)
     if name is not None:
@@ -85,7 +93,7 @@ async def add_clan_cn(session: CommandSession):
     await add_clan(session, 2)
 
 
-@on_command('会战进度', aliases=('状态', ), permission=permission.GROUP, only_to_me=False)
+@on_command('会战进度', aliases=('状态', '战况如何', '致远星战况如何'), permission=permission.GROUP, only_to_me=False)
 async def show_progress(session: CommandSession):
     gid = session.ctx['group_id']
 
@@ -93,8 +101,22 @@ async def show_progress(session: CommandSession):
 
     if clan is None:
         await session.finish('当前群没有创建公会')
-    else:
-        await session.finish('当前%d周目%s，剩余血量%s' % (r, boss_names[boss], '{:,}'.format(hp)))
+        return
+
+    msg = '当前%d周目%s，剩余血量%s' % (r,
+                               boss_names[boss], '{:,}'.format(hp))
+
+    splitters = '\n----------\n'
+    msgs_on_enter = await see_enter(gid)
+    if len(msgs_on_enter) > 0:
+        msg += splitters + '当前挑战中：\n'
+        msg += '\n'.join(msgs_on_enter)
+
+    # msg_on_tree = await see_reserve(gid, 0)
+    # if len(msg_on_tree) > 5:
+    #     msg += splitters + msg_on_tree
+
+    await session.finish(msg)
 
 
 @on_command('报告', aliases=('出刀统计', '每日报告'), permission=permission.GROUP, only_to_me=False)
@@ -205,6 +227,8 @@ async def update_rec(gid: int, uid: int, dmg: int):
         await bot.send_group_msg(group_id=gid, message='你今天已经报满三刀了')
         return
 
+    del_enter(gid, uid)
+
     dmg_type, new_flag = '完整刀', rec_type
     if flag in [0, 2, 3]:
         dmg_type = ['完整刀', '尾刀'][rec_type]
@@ -222,6 +246,7 @@ async def update_rec(gid: int, uid: int, dmg: int):
                                 boss_names[after_boss], '{:,}'.format(after_hp))
 
     if prev_boss != after_boss:
+        clear_enter(gid)
         on_tree = call_reserve(gid, 0)
         if len(on_tree) > 0:
             msg += f'\n----------\n可以下树了{on_tree}'
@@ -307,12 +332,115 @@ psw = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'
 psw = ''.join(choices(psw, k=6))
 @on_command('清空会战记录', aliases=('清除会战记录', '重置进度', '重置会战进度'), permission=permission.GROUP_OWNER | permission.GROUP_ADMIN, only_to_me=False)
 async def clear_rec(session: CommandSession):
-    msg = session.get('message', prompt=f'请回复[{psw}]以重置会战进度').strip()
+    msg = session.get('message', prompt=f'此操作不可逆！请回复[{psw}]以重置会战进度').strip()
     if msg == psw:
         gid = session.ctx['group_id']
         battleObj.clear_rec(gid)
 
         await show_progress(session)
+
+
+def add_enter(gid: int, uid: int, msg: str = ''):
+    reservation_path = os.path.join(reservations_folder, f'{gid}.json')
+    reservation = {}
+    if os.path.exists(reservation_path):
+        reservation = json.load(open(reservation_path, 'r'))
+    enter_details = reservation.get('enters', {})
+    user_detail = [translate_time_str(datetime.now()), msg[:10]]
+    enter_details[str(uid)] = user_detail
+    reservation['enters'] = enter_details
+    json.dump(reservation, open(reservation_path, 'w'))
+
+
+async def see_enter(gid: int) -> list:
+    reservation_path = os.path.join(reservations_folder, f'{gid}.json')
+    reservation = {}
+    if os.path.exists(reservation_path):
+        reservation = json.load(open(reservation_path, 'r'))
+    enter_details = reservation.get('enters', {})
+
+    msgs = []
+    for uid, detail in enter_details.items():
+        user_name = await get_member_name(gid, int(uid))
+
+        time_str, m = detail
+        time_delta = (datetime.now() -
+                      translate_str_time(time_str)).total_seconds() // 60
+
+        msg = f'({int(time_delta)}分钟前){user_name}'
+        if m:
+            msg += '：' + m
+
+        msgs.append(msg)
+
+    msgs.sort()
+    return msgs
+
+
+def del_enter(gid: int, uid: int):
+    reservation_path = os.path.join(reservations_folder, f'{gid}.json')
+    reservation = {}
+    if os.path.exists(reservation_path):
+        reservation = json.load(open(reservation_path, 'r'))
+    enter_details = reservation.get('enters', {})
+    if str(uid) in enter_details:
+        del enter_details[str(uid)]
+        json.dump(reservation, open(reservation_path, 'w'))
+
+
+def clear_enter(gid: int):
+    reservation_path = os.path.join(reservations_folder, f'{gid}.json')
+    reservation = {}
+    if os.path.exists(reservation_path):
+        reservation = json.load(open(reservation_path, 'r'))
+    reservation['enters'] = {}
+    json.dump(reservation, open(reservation_path, 'w'))
+
+
+@on_command('申请出刀', aliases=('我进了', ), permission=permission.GROUP, only_to_me=False)
+async def _(session: CommandSession):
+    context = session.ctx
+    gid = context['group_id']
+    uid = context['user_id']
+
+    clan = battleObj.get_clan(gid)
+    if clan is None:
+        return
+
+    add_enter(gid, uid)
+    await session.finish('已为你记录出刀状态', at_sender=True)
+
+
+@on_command('取消出刀', aliases=('撤销出刀', ), permission=permission.GROUP, only_to_me=False)
+async def _(session: CommandSession):
+    context = session.ctx
+    gid = context['group_id']
+    uid = context['user_id']
+
+    clan = battleObj.get_clan(gid)
+    if clan is None:
+        return
+
+    del_enter(gid, uid)
+    await session.finish('已为你取消出刀状态', at_sender=True)
+
+
+@on_command('暂停', aliases=('zt', ), permission=permission.GROUP, shell_like=True, only_to_me=False)
+async def _(session: CommandSession):
+    context = session.ctx
+    gid = context['group_id']
+    uid = context['user_id']
+    argv = session.argv
+
+    clan = battleObj.get_clan(gid)
+    if clan is None:
+        return
+
+    if len(argv) == 0:
+        return
+
+    add_enter(gid, uid, ' '.join(argv))
+    await session.finish('已为你记录出刀状态', at_sender=True)
 
 
 def add_reserve(gid: int, uid: int, boss: int) -> str:
@@ -333,6 +461,7 @@ def add_reserve(gid: int, uid: int, boss: int) -> str:
         json.dump(reservation, open(reservation_path, 'w'))
 
         if boss == 0:
+            add_enter(gid, uid, '挂树')
             return f'{str(MessageSegment.at(uid))} 成功上树，当前树上人：{len(reservation_list)}'
         return f'{str(MessageSegment.at(uid))} 你已成功预约{boss_names[boss]}，当前Boss预约人数：{len(reservation_list)}'
 
