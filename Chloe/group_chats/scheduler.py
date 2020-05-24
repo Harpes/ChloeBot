@@ -24,18 +24,6 @@ async def scheduler_reminder(msg: str):
             pass
 
 
-# 1450
-@nonebot.scheduler.scheduled_job('cron', hour=14, minute=50)
-async def _():
-    msg = '背刺Time背刺Time背刺Time背刺Time背刺Time!!!\n大家记得背刺群主'
-    await scheduler_reminder(msg)
-
-# 1456
-@nonebot.scheduler.scheduled_job('cron', hour=14, minute=56)
-async def _():
-    msg = str(datetime.datetime.now())
-    await scheduler_reminder(msg)
-
 # 0800
 @nonebot.scheduler.scheduled_job('cron', hour=8, minute=0)
 async def _():
