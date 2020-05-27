@@ -109,12 +109,7 @@ async def show_progress(session: CommandSession):
     splitters = '\n----------\n'
     msgs_on_enter = await see_enter(gid)
     if len(msgs_on_enter) > 0:
-        msg += splitters + '当前挑战中：\n'
-        msg += '\n'.join(msgs_on_enter)
-
-    # msg_on_tree = await see_reserve(gid, 0)
-    # if len(msg_on_tree) > 5:
-    #     msg += splitters + msg_on_tree
+        msg += splitters + '当前挑战中：\n' + msgs_on_enter
 
     await session.finish(msg)
 
@@ -228,6 +223,7 @@ async def update_rec(gid: int, uid: int, dmg: int):
         return
 
     del_enter(gid, uid)
+    cancel_reserve(gid, uid, 0)
 
     dmg_type, new_flag = '完整刀', rec_type
     if flag in [0, 2, 3]:
@@ -352,7 +348,7 @@ def add_enter(gid: int, uid: int, msg: str = ''):
     json.dump(reservation, open(reservation_path, 'w'))
 
 
-async def see_enter(gid: int) -> list:
+async def see_enter(gid: int) -> str:
     reservation_path = os.path.join(reservations_folder, f'{gid}.json')
     reservation = {}
     if os.path.exists(reservation_path):
@@ -365,16 +361,19 @@ async def see_enter(gid: int) -> list:
 
         time_str, m = detail
         time_delta = (datetime.now() -
-                      translate_str_time(time_str)).total_seconds() // 60
+                      translate_str_time(time_str)).total_seconds() / 60
 
         msg = f'({int(time_delta)}分钟前){user_name}'
         if m:
             msg += '：' + m
 
-        msgs.append(msg)
+        msgs.append((msg, time_delta))
 
-    msgs.sort()
-    return msgs
+    def sort_by_minutes(elem):
+        return elem[1]
+
+    msgs.sort(key=sort_by_minutes)
+    return '\n'.join([i[0] for i in msgs])
 
 
 def del_enter(gid: int, uid: int):

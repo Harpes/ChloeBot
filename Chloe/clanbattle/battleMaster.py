@@ -6,7 +6,7 @@ from .database.sqlite import DataBaseIO, getMonth
 
 
 def get_config():
-    config_file = path.join(path.dirname(__file__), 'config.json')
+    config_file = path.join('config', 'clanbattle.json')
     with open(config_file, encoding='UTF-8') as f:
         config = json.load(f)
         return config
