@@ -10,6 +10,14 @@ function toThousands(num) {
     }
     return result;
 }
+function dataDesensitization(num) {
+    const numStr = `${num}`;
+    const len = numStr.length;
+    if (len > 4) {
+        return numStr.substring(0, 2) + '*' + numStr.substring(len - 3, len);
+    }
+    return numStr;
+}
 
 function renderItem(params, api) {
     const [index, start, end, dmg] = [0, 1, 2, 3].map(i => api.value(i));
@@ -63,7 +71,7 @@ request.onload = () => {
     const category = Array.from(categoriesSet);
     const userIds = Array.from(uidSet);
     const datas = userIds.map(_ => []);
-    const rows = userIds.map(uid => [uid, names[uid], 0, 0]);
+    const rows = userIds.map(uid => [uid, names[uid], 0, 0, 0]);
 
     let lastBoss = '';
     let dmgStack = 0;
@@ -87,6 +95,7 @@ request.onload = () => {
         else row[2] += 0.5;
 
         row[3] += score;
+        row[4] += dmg;
 
         row.push(`(${time.slice(-5)})${type} ${toThousands(dmg)}`);
         rows[userIds.indexOf(uid)] = [...row];
@@ -134,14 +143,22 @@ request.onload = () => {
     const barChart = echarts.init(document.getElementById('bar'));
     barChart.setOption(options);
 
+    const timeRange = [
+        records[0]['time'].slice(-5),
+        records[records.length - 1]['time'].slice(-5),
+    ];
     const tableElement = document.getElementById('table');
-    const tableHead =
-        '<table class="gridtable"><thead><tr><th></th><th></th><th>昵称</th><th>出刀</th><th>分数</th></tr></thead><tbody>';
+    const tableHead = `<table class="gridtable"><thead><tr><th></th><th>ID</th>
+    <th>昵称</th><th>出刀</th><th>分数</th><th>伤害</th><th>${timeRange.join(
+        ' ~ '
+    )}</th></tr></thead><tbody>`;
     const tableEnd = '</tbody></table>';
     const tableRows = rows
         .sort((a, b) => b[3] - a[3])
         .map(r => {
+            r[0] = dataDesensitization(r[0]);
             r[3] = toThousands(parseInt(r[3]));
+            r[4] = toThousands(r[4]);
             return r;
         })
         .map(
