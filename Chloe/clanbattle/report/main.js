@@ -86,6 +86,7 @@ request.onload = () => {
             dmgStack,
             dmg + dmgStack,
             dmg,
+            time.slice(-5),
         ]);
         dmgStack += dmg;
 
@@ -105,7 +106,7 @@ request.onload = () => {
         name: names[uid],
         type: 'custom',
         data: datas[uindex],
-        encode: { x: 0, y: [1, 2], tooltip: 3 },
+        encode: { x: 0, y: [1, 2], tooltip: [3, 4] },
         renderItem,
     }));
 
@@ -154,7 +155,7 @@ request.onload = () => {
     )}</th></tr></thead><tbody>`;
     const tableEnd = '</tbody></table>';
     const tableRows = rows
-        .sort((a, b) => b[3] - a[3])
+        .sort((a, b) => b[2] * 300000000 + b[3] - a[2] * 300000000 - a[3])
         .map(r => {
             r[0] = dataDesensitization(r[0]);
             r[3] = toThousands(parseInt(r[3]));
