@@ -2,7 +2,7 @@ import json
 from datetime import datetime, timedelta
 from os import path
 
-from .database.sqlite import DataBaseIO, getMonth
+from .database.sqlite import DataBaseIO
 
 
 def get_config():
@@ -96,7 +96,14 @@ class BattleMaster(object):
         rec_cols = ['recid', 'gid', 'uid', 'time',
                     'round', 'boss', 'dmg', 'flag']
         recs = self.databaseObj.getRec(gid, uid, time)
-        return [dict(zip(rec_cols, i)) for i in recs]
+        results = [dict(zip(rec_cols, i)) for i in recs]
+        _, server = self.get_clan(gid)
+        for rec in results:
+            r, b, d = rec['round'], rec['boss'], rec['dmg']
+            rate = self.get_score_rate(r, b, server)
+            rec['score'] = int(d * rate)
+
+        return results
 
     def add_rec(self, gid: int, uid: int, r: int, boss: int, dmg: int, flag: int):
         self.databaseObj.addRec(gid, uid, r, boss, dmg, flag)
