@@ -1,12 +1,13 @@
 import json
 import os
 import re
-from datetime import datetime, timedelta
+from datetime import datetime
 from random import choices
 
 import nonebot
 from nonebot import CommandSession, MessageSegment, on_command, permission
 
+from . import encode, get_start_of_day
 from .battleMaster import BattleMaster
 
 __plugin_name__ = 'clanbattle'
@@ -27,16 +28,6 @@ if not os.path.exists(data_folder):
 
 bot = nonebot.get_bot()
 battleObj = BattleMaster()
-
-
-def get_start_of_day() -> datetime:
-    now = datetime.now()
-    start = datetime(now.year, now.month, now.day, 5)
-
-    if now > start:
-        return start
-    else:
-        return start - timedelta(days=1)
 
 
 def translate_time_str(value: datetime, f: str = '%Y%m%d%H%M') -> str:
@@ -125,7 +116,7 @@ async def show_report(session: CommandSession):
         return
     server = clan[1]
 
-    recs = battleObj.get_rec(gid, uid=None, time=get_start_of_day())
+    recs = battleObj.get_rec(gid, uid=None, start=get_start_of_day())
     if len(recs) == 0:
         await session.finish('今日尚无出刀记录。')
         return
@@ -303,7 +294,7 @@ async def undo_rec(session: CommandSession):
     if clan is None:
         return
 
-    recs = battleObj.get_rec(gid, uid=None, time=get_start_of_day())
+    recs = battleObj.get_rec(gid, uid=None, start=get_start_of_day())
     if len(recs) == 0:
         await session.finish('今日尚无出刀记录。')
         return
@@ -609,7 +600,7 @@ async def get_reserve(session: CommandSession):
     await session.finish(msg)
 
 
-@on_command('挂树', aliases=('上树', ), permission=permission.GROUP, only_to_me=False)
+@on_command('挂树', aliases=('上树', '掛樹'), permission=permission.GROUP, only_to_me=False)
 async def up_tree(session: CommandSession):
     await reserve(session, 0)
 
