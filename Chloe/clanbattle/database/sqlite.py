@@ -104,16 +104,20 @@ class DataBaseIO(object):
         conn.commit()
         conn.close()
 
-    def getRec(self, gid: int, uid: int = None, time: datetime = None) -> list:
+    def getRec(self, gid: int, uid: int = None, start: datetime = None, end: datetime = None) -> list:
         conn, month = self._createRecs(gid)
         cur = conn.cursor()
 
         select_sql = 'SELECT * FROM rec%s WHERE gid = %s' % (month, gid)
         if not uid is None:
             select_sql += ' AND uid = %s' % (uid, )
-        if not time is None:
+        if not start is None:
             select_sql += ' AND time > "%s"' % (
-                time.strftime('%Y/%m/%d %H:%M'), )
+                start.strftime('%Y/%m/%d %H:%M'), )
+        if not end is None:
+            select_sql += ' AND time < "%s"' % (
+                end.strftime('%Y/%m/%d %H:%M'), )
+
         cur.execute(select_sql)
         result = cur.fetchall()
 

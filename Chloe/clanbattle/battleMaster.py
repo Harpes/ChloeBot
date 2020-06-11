@@ -92,10 +92,10 @@ class BattleMaster(object):
 
         return (name, r, boss, hp)
 
-    def get_rec(self, gid: int, uid: int = None, time: datetime = None) -> list:
+    def get_rec(self, gid: int, uid: int = None, start: datetime = None, end: datetime = None) -> list:
         rec_cols = ['recid', 'gid', 'uid', 'time',
                     'round', 'boss', 'dmg', 'flag']
-        recs = self.databaseObj.getRec(gid, uid, time)
+        recs = self.databaseObj.getRec(gid, uid, start, end)
         results = [dict(zip(rec_cols, i)) for i in recs]
         _, server = self.get_clan(gid)
         for rec in results:
