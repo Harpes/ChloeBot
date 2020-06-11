@@ -20,11 +20,6 @@ reservations_folder = 'reservations'
 if not os.path.exists(reservations_folder):
     os.mkdir(reservations_folder)
 
-data_folder = os.path.join(
-    os.path.dirname(__file__), 'report', 'data')
-if not os.path.exists(data_folder):
-    os.mkdir(data_folder)
-
 
 bot = nonebot.get_bot()
 battleObj = BattleMaster()
@@ -114,7 +109,6 @@ async def show_report(session: CommandSession):
     clan = battleObj.get_clan(gid)
     if clan is None:
         return
-    server = clan[1]
 
     recs = battleObj.get_rec(gid, uid=None, start=get_start_of_day())
     if len(recs) == 0:
@@ -123,11 +117,9 @@ async def show_report(session: CommandSession):
 
     # 整刀数 尾刀数
     whole_nums, half_nums = 0, 0
-    rec_rows = []
-    member_name = {}
+
     for rec in recs:
-        uid, time, r, boss, dmg, flag = [rec[i] for i in [
-            'uid', 'time', 'round', 'boss', 'dmg', 'flag']]
+        flag = rec['flag']
 
         # if flag in [0, 2, 3]:
         #     rec_nums += 1
@@ -139,39 +131,11 @@ async def show_report(session: CommandSession):
             whole_nums += 1
             half_nums -= 1
 
-        value = {'uid': uid, 'time': time,
-                 'round': r, 'boss': boss, 'dmg': dmg, 'flag': flag}
-
-        if uid not in member_name:
-            name = await get_member_name(gid, uid)
-            member_name[uid] = name
-        name = member_name[uid]
-        value['user_name'] = name
-
-        score = battleObj.get_score_rate(r, boss, server) * dmg
-        value['score'] = score
-
-        stage = ['A', 'B', 'C', 'D'][battleObj.get_stage(r) - 1]
-        rec_type = ['完整刀', '尾刀', '余刀', '余尾刀'][flag]
-        value['type'] = stage + str(boss) + rec_type
-
-        rec_rows.append(value)
-
     msg = '今日已出%s完整刀。' % (whole_nums, )
     if half_nums != 0:
         msg = msg.replace("。", "，%s尾刀。" % (half_nums, ))
 
-    try:
-        file_name = str(gid) + datetime.now().strftime('%m%d%H')
-        out_data_path = os.path.join(
-            os.path.dirname(__file__), 'report', 'data', file_name + '.json')
-        json.dump(rec_rows, open(out_data_path, 'w',
-                                 encoding='utf-8'), ensure_ascii=False)
-
-        msg += '\n详情：' + server_http_adress + '?' + file_name
-    except Exception as e:
-        print(e)
-        pass
+    msg += '\n详情：' + server_http_adress + '/' + encode(gid)
 
     await session.finish(msg)
 
