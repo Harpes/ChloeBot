@@ -10,8 +10,12 @@ function toThousands(num) {
     }
     return result;
 }
-function dataDesensitization(num) {
-    const numStr = `${num}`;
+function getBossName(r, b) {
+    const stage = r > 34 ? 'D' : r > 10 ? 'C' : r > 3 ? 'B' : 'A';
+    return stage + b;
+}
+function dataDesensitization(uidStr) {
+    const numStr = atob(uidStr);
     const len = numStr.length;
     if (len > 4) {
         return numStr.substring(0, 2) + '*' + numStr.substring(len - 3, len);
@@ -49,40 +53,49 @@ function renderItem(params, api) {
     );
 }
 
-const jsonUrl = 'data/' + window.location.search.slice(1) + '.json';
-const request = new XMLHttpRequest();
-request.open('get', jsonUrl);
-request.send(null);
-request.onload = () => {
-    if (request.status !== 200) return;
-    const records = JSON.parse(request.responseText);
-    // { uid, time, round, boss, dmg, user_name, score, type, flag }
+const group = window.location.pathname.slice(1);
+const search = window.location.search.slice(1);
 
-    const names = {};
-    const uidSet = new Set();
-    const categoriesSet = new Set();
+let recUrl = `/recs/${group}`;
+if (search.length > 1) {
+    recUrl += `?date=${search}`;
+}
+const recResponse = fetch(recUrl);
 
-    records.forEach(({ uid, round, user_name, type }) => {
-        names[uid] = user_name;
-        uidSet.add(uid);
-        categoriesSet.add(`${round}周目${type.slice(0, 2)}`);
-    });
+const memberUrl = `/members/${group}`;
+const memResponse = fetch(memberUrl);
 
-    const category = Array.from(categoriesSet);
-    const userIds = Array.from(uidSet);
-    const datas = userIds.map(_ => []);
-    const rows = userIds.map(uid => [uid, names[uid], 0, 0, 0]);
+Promise.all([recResponse, memResponse]).then(async ([recsRes, memRes]) => {
+    const recs = await recsRes.json();
+    const names = await memRes.json();
+
+    const tableElement = document.getElementById('table');
+
+    if (recs.length < 1) {
+        tableElement.innerHTML = '今日尚无出刀记录';
+        return false;
+    }
+
+    const recType = ['完整刀', '尾刀', '余刀', '余尾刀'];
+
+    const bossList = [];
+    const uids = Object.keys(names);
+    const dataRows = uids.map(uid => [uid, names[uid], 0, 0, 0]);
+    const datas = uids.map(_ => []);
 
     let lastBoss = '';
     let dmgStack = 0;
-    records.forEach(({ uid, round, dmg, type, score, flag, time }) => {
-        const bossName = `${round}周目${type.slice(0, 2)}`;
-        if (lastBoss !== bossName) {
-            lastBoss = bossName;
+    recs.forEach(({ boss, dmg, flag, round, score, time, uid }) => {
+        const currentBoss = `${round}周目${getBossName(round, boss)}`;
+        if (currentBoss != lastBoss) {
+            lastBoss = currentBoss;
             dmgStack = 0;
+            bossList.push(currentBoss);
         }
-        datas[userIds.indexOf(uid)].push([
-            category.indexOf(bossName),
+
+        const uidIndex = uids.indexOf(uid);
+        datas[uidIndex].push([
+            bossList.length - 1,
             dmgStack,
             dmg + dmgStack,
             dmg,
@@ -90,30 +103,29 @@ request.onload = () => {
         ]);
         dmgStack += dmg;
 
-        const row = [...rows[userIds.indexOf(uid)]];
-
-        if (flag === 0) row[2] += 1;
-        else row[2] += 0.5;
-
+        const row = [...dataRows[uidIndex]];
+        row[2] += flag === 0 ? 1 : 0.5;
         row[3] += score;
         row[4] += dmg;
-
-        row.push(`(${time.slice(-5)})${type} ${toThousands(dmg)}`);
-        rows[userIds.indexOf(uid)] = [...row];
+        row.push(
+            `(${time.slice(-5)})${currentBoss.slice(-2)}${
+                recType[flag]
+            } ${toThousands(dmg)}`
+        );
+        dataRows[uidIndex] = [...row];
     });
 
-    const series = userIds.map((uid, uindex) => ({
+    const series = uids.map((uid, uindex) => ({
         name: names[uid],
         type: 'custom',
         data: datas[uindex],
         encode: { x: 0, y: [1, 2], tooltip: [3, 4] },
         renderItem,
     }));
-
     const options = {
         series,
         legend: {
-            data: userIds.map(uid => names[uid]),
+            data: uids.map(uid => names[uid]),
         },
         grid: {
             left: '2%',
@@ -123,7 +135,7 @@ request.onload = () => {
         xAxis: [
             {
                 type: 'category',
-                data: category,
+                data: bossList,
             },
         ],
         yAxis: [
@@ -131,7 +143,7 @@ request.onload = () => {
                 type: 'value',
                 axisLabel: { formatter: value => `${value / 10000}w` },
                 min: 0,
-                max: value => Math.max(value.max, 15000000),
+                max: value => Math.max(value.max, 10000000),
             },
         ],
         tooltip: {
@@ -140,25 +152,23 @@ request.onload = () => {
         },
         toolbox: { feature: { saveAsImage: {} } },
     };
-
     const barChart = echarts.init(document.getElementById('bar'));
     barChart.setOption(options);
 
     const timeRange = [
-        records[0]['time'].slice(-5),
-        records[records.length - 1]['time'].slice(-5),
+        recs[0]['time'].slice(-11),
+        recs[recs.length - 1]['time'].slice(-5),
     ];
-    const tableElement = document.getElementById('table');
     const tableHead = `<table class="gridtable"><thead><tr><th></th><th>ID</th>
     <th>昵称</th><th>出刀</th><th>分数</th><th>伤害</th><th>${timeRange.join(
         ' ~ '
     )}</th></tr></thead><tbody>`;
     const tableEnd = '</tbody></table>';
-    const tableRows = rows
+    const tableRows = dataRows
         .sort((a, b) => b[2] * 300000000 + b[3] - a[2] * 300000000 - a[3])
         .map(r => {
             r[0] = dataDesensitization(r[0]);
-            r[3] = toThousands(parseInt(r[3]));
+            r[3] = toThousands(r[3]);
             r[4] = toThousands(r[4]);
             return r;
         })
@@ -170,4 +180,4 @@ request.onload = () => {
         )
         .join('');
     tableElement.innerHTML = tableHead + tableRows + tableEnd;
-};
+});
