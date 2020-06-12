@@ -21,15 +21,34 @@ def root_error():
 
 @app.route('/<string:group>', methods=['GET'])
 def rec_main(group):
-    gid = decode(group)
+    try:
+        gid = decode(group)
 
-    name, _, _, _ = battleObj.get_current_state(gid)
-    if name is None:
+        name, _, _, _ = battleObj.get_current_state(gid)
+        if name is None:
+            abort(404)
+
+        title = f'公会 {name}'
+
+        return render_template('index.html', title=title, render_type='recs')
+    except:
         abort(404)
 
-    title = f'公会 {name}'
 
-    return render_template('index.html', title=title, render_type='recs')
+@app.route('/<string:group>/<string:user>', methods=['GET'])
+def rec_mems(group, user):
+    try:
+        gid = decode(group)
+        uid = decode(user)
+
+        user_name = battleObj.get_member_name(gid, uid)
+        if user_name is None:
+            abort(404)
+        title = f'{user_name} 的出刀记录'
+
+        return render_template('index.html', title=title, render_type='mems')
+    except:
+        abort(404)
 
 
 @app.route('/static/<path:file_path>', methods=['GET'])
@@ -42,18 +61,19 @@ def get_recs(group):
     try:
         gid = decode(group)
 
+        uid = request.args.get('uid')
+        if not uid is None:
+            uid = decode(uid)
+
         date = request.args.get('date')
         start, end = None, None
         if date is None:
-            start = get_start_of_day()
+            if uid is None:
+                start = get_start_of_day()
         else:
             start = get_start_of_day(datetime.strptime(
                 date, '%Y%m%d'))+timedelta(days=1)
             end = start + timedelta(days=1)
-
-        uid = request.args.get('uid')
-        if not uid is None:
-            uid = decode(uid)
 
         recs = battleObj.get_rec(gid, uid, start, end)
     except:

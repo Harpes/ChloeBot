@@ -11,6 +11,8 @@ bot = nonebot.get_bot()
 async def _(context):
     message = context['raw_message']
     group_id = context['group_id']
+    if len(message) > 20:
+        return
 
     if random.randint(0, 100) < 3:
         await bot.send_group_msg(group_id=group_id, message=message)

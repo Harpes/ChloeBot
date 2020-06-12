@@ -167,6 +167,7 @@ Promise.all([recResponse, memResponse]).then(async ([recsRes, memRes]) => {
     const tableRows = dataRows
         .sort((a, b) => b[2] * 300000000 + b[3] - a[2] * 300000000 - a[3])
         .map(r => {
+            r[1] = `<a href="/${group}/${r[0]}">${r[1]}</a>`;
             r[0] = dataDesensitization(r[0]);
             r[3] = toThousands(r[3]);
             r[4] = toThousands(r[4]);
