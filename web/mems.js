@@ -69,9 +69,9 @@ fetch(`/recs/${group}?uid=${user}`)
             row[1] += score;
             row[2] += dmg;
             row.push(
-                `${getBossName(round, boss)}${recType[flag]}\n${toThousands(
-                    dmg
-                )}`
+                `(${time.slice(-5)})${getBossName(round, boss)}${
+                    recType[flag]
+                }\n${toThousands(dmg)}`
             );
             if (flag === 0) row.push('');
             dataRows[rowIndex] = [...row];

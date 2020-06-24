@@ -160,7 +160,7 @@ Promise.all([recResponse, memResponse]).then(async ([recsRes, memRes]) => {
         recs[recs.length - 1]['time'].slice(-5),
     ];
     const tableHead = `<table class="gridtable"><thead><tr><th></th><th>ID</th>
-    <th>昵称</th><th>出刀</th><th>分数</th><th>伤害</th><th>${timeRange.join(
+    <th>昵称</th><th>出刀</th><th>分数</th><th>伤害</th><th colspan="2">${timeRange.join(
         ' ~ '
     )}</th></tr></thead><tbody>`;
     const tableEnd = '</tbody></table>';
