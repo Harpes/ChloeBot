@@ -1,7 +1,7 @@
 import json
 import os
 import re
-from datetime import datetime
+from datetime import datetime, timedelta
 from random import choices
 
 import nonebot
@@ -102,7 +102,62 @@ async def show_progress(session: CommandSession):
     await session.finish(msg)
 
 
-@on_command('报告', aliases=('出刀统计', '每日报告'), permission=permission.GROUP, only_to_me=False)
+@on_command('查询尾刀', aliases=('尾刀统计', '尾刀查询', '查尾刀'), permission=permission.GROUP, only_to_me=False)
+async def show_kill_rec(session: CommandSession):
+    gid = session.ctx['group_id']
+
+    clan = battleObj.get_clan(gid)
+    if clan is None:
+        return
+
+    recs = battleObj.get_kill_rec(gid)
+    if len(recs) == 0:
+        await session.finish('当前尚无尾刀。')
+        return
+
+    msgs = [[] for _ in boss_names]
+    for rec in recs:
+        uid, dmg, boss = rec['uid'], rec['dmg'], rec['boss']
+        user_name = await get_member_name(gid, int(uid))
+        msgs[boss].append(f'{user_name}({int(dmg / 10000)}w)')
+
+    msg = f'当前共有{len(recs)}尾刀。'
+    for i, m in enumerate(msgs):
+        if len(m) == 0:
+            continue
+
+        msg += '\n' + boss_names[i] + '：' + '、'.join(m)
+
+    await session.finish(msg)
+
+
+@on_command('昨日报告', permission=permission.GROUP, only_to_me=False)
+async def show_report_yesterday(session: CommandSession):
+    gid = session.ctx['group_id']
+
+    clan = battleObj.get_clan(gid)
+    if clan is None:
+        return
+
+    yesterday = get_start_of_day(datetime.now() - timedelta(days=1))
+    recs = battleObj.get_rec(
+        gid, uid=None, start=yesterday, end=get_start_of_day())
+    if len(recs) == 0:
+        await session.finish('昨日无出刀记录。')
+        return
+
+    rec = recs[0]
+    begin_round, begin_boss = rec['round'], rec['boss']
+    rec = recs[len(recs) - 1]
+    end_round, end_boss = rec['round'], rec['boss']
+    msg = f'昨日进度{begin_round}周目{boss_names[begin_boss]}~{end_round}周目{boss_names[end_boss]}。'
+    msg += '\n详情：' + server_http_adress + '/' + \
+        encode(gid) + '?' + yesterday.strftime('%Y%m%d')
+
+    await session.finish(msg)
+
+
+@on_command('报告', aliases=('出刀统计', '今日报告'), permission=permission.GROUP, only_to_me=False)
 async def show_report(session: CommandSession):
     gid = session.ctx['group_id']
 
@@ -117,12 +172,11 @@ async def show_report(session: CommandSession):
 
     # 整刀数 尾刀数
     whole_nums, half_nums = 0, 0
-
+    begin_round, begin_boss = recs[0]['round'], recs[0]['boss']
+    end_round, end_boss = begin_round, begin_boss
     for rec in recs:
-        flag = rec['flag']
+        flag, end_round, end_boss = rec['flag'], rec['round'], rec['boss']
 
-        # if flag in [0, 2, 3]:
-        #     rec_nums += 1
         if flag == 0:
             whole_nums += 1
         elif flag == 1:
@@ -131,7 +185,8 @@ async def show_report(session: CommandSession):
             whole_nums += 1
             half_nums -= 1
 
-    msg = '今日已出%s完整刀。' % (whole_nums, )
+    msg = '今日进度%s周目%s~%s周目%s，已出%s完整刀。' % (
+        begin_round, boss_names[begin_boss], end_round, boss_names[end_boss], whole_nums)
     if half_nums != 0:
         msg = msg.replace("。", "，%s尾刀。" % (half_nums, ))
 
@@ -315,12 +370,13 @@ async def see_enter(gid: int) -> str:
     msgs = []
     for uid, detail in enter_details.items():
         user_name = await get_member_name(gid, int(uid))
+        kill = '*尾刀*' if battleObj.if_kill(gid, uid) else ''
 
         time_str, m = detail
         time_delta = (datetime.now() -
                       translate_str_time(time_str)).total_seconds() / 60
 
-        msg = f'({int(time_delta)}分钟前){user_name}'
+        msg = f'{kill}({int(time_delta)}分钟前){user_name}'
         if m:
             msg += '：' + m
 
@@ -353,7 +409,7 @@ def clear_enter(gid: int):
     json.dump(reservation, open(reservation_path, 'w'))
 
 
-@on_command('申请出刀', aliases=('我进了', ), permission=permission.GROUP, only_to_me=False)
+@on_command('申请出刀', aliases=('我进了', '我上了'), permission=permission.GROUP, only_to_me=False)
 async def _(session: CommandSession):
     context = session.ctx
     gid = context['group_id']
@@ -381,7 +437,7 @@ async def _(session: CommandSession):
     await session.finish('已为你取消出刀状态', at_sender=True)
 
 
-@on_command('暂停', aliases=('zt', ), permission=permission.GROUP, shell_like=True, only_to_me=False)
+@on_command('暂停', aliases=('zt', 'ZT'), permission=permission.GROUP, shell_like=True, only_to_me=False)
 async def _(session: CommandSession):
     context = session.ctx
     gid = context['group_id']
@@ -500,6 +556,9 @@ async def unreserve(session: CommandSession, boss: int):
     if clan is None:
         return
 
+    if boss == 0:
+        del_enter(gid, uid)
+
     msg = cancel_reserve(gid, uid, boss)
     await session.finish(msg)
 
@@ -554,7 +613,7 @@ async def _(session: CommandSession):
     await unreserve(session, 5)
 
 
-@on_command('预约查询', aliases=('查询预约', ), permission=permission.GROUP, only_to_me=False)
+@on_command('预约查询', aliases=('查询预约', '查预约'), permission=permission.GROUP, only_to_me=False)
 async def get_reserve(session: CommandSession):
     gid = session.ctx['group_id']
     msg = '当前各王预约：'

@@ -2,6 +2,7 @@ import json
 from datetime import datetime, timedelta
 from os import path
 
+from . import get_start_of_day
 from .database.sqlite import DataBaseIO
 
 
@@ -104,6 +105,32 @@ class BattleMaster(object):
             rec['score'] = int(d * rate)
 
         return results
+
+    # 获取当前的尾刀
+    def get_kill_rec(self, gid: int) -> list:
+        recs = self.get_rec(gid, start=get_start_of_day())
+        user_kills = {}
+        for rec in recs:
+            uid, flag = rec['uid'], rec['flag']
+            if flag == 1:
+                user_kills[uid] = rec
+            elif uid in user_kills:
+                del user_kills[uid]
+
+        result = [rec for rec in user_kills.values()]
+        return result
+
+    # 判断当前玩家是否持有尾刀
+    def if_kill(self, gid: int, uid: int) -> bool:
+        recs = self.get_rec(gid, uid, get_start_of_day())
+        result = False
+        for rec in recs:
+            if rec['flag'] == 1:
+                result = True
+            else:
+                result = False
+
+        return result
 
     def add_rec(self, gid: int, uid: int, r: int, boss: int, dmg: int, flag: int):
         self.databaseObj.addRec(gid, uid, r, boss, dmg, flag)
