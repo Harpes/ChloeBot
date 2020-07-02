@@ -85,6 +85,8 @@ Promise.all([recResponse, memResponse]).then(async ([recsRes, memRes]) => {
 
     let lastBoss = '';
     let dmgStack = 0;
+    let wholeNum = 0;
+    let halfNum = 0;
     recs.forEach(({ boss, dmg, flag, round, score, time, uid }) => {
         const currentBoss = `${round}周目${getBossName(round, boss)}`;
         if (currentBoss != lastBoss) {
@@ -104,7 +106,7 @@ Promise.all([recResponse, memResponse]).then(async ([recsRes, memRes]) => {
         dmgStack += dmg;
 
         const row = [...dataRows[uidIndex]];
-        row[2] += flag === 0 ? 1 : 0.5;
+
         row[3] += score;
         row[4] += dmg;
         row.push(
@@ -112,6 +114,17 @@ Promise.all([recResponse, memResponse]).then(async ([recsRes, memRes]) => {
                 recType[flag]
             } ${toThousands(dmg)}`
         );
+
+        if (flag === 0) {
+            row.push('');
+            row[2] += 1;
+            wholeNum += 1;
+        } else {
+            row[2] += 0.5;
+            wholeNum += flag === 1 ? 0 : 1;
+            halfNum += flag === 1 ? 1 : -1;
+        }
+
         dataRows[uidIndex] = [...row];
     });
 
@@ -162,7 +175,7 @@ Promise.all([recResponse, memResponse]).then(async ([recsRes, memRes]) => {
     const tableHead = `<table class="gridtable"><thead><tr><th></th><th>ID</th>
     <th>昵称</th><th>出刀</th><th>分数</th><th>伤害</th><th colspan="2">${timeRange.join(
         ' ~ '
-    )}</th></tr></thead><tbody>`;
+    )}</th><th>${`完整刀：${wholeNum}，尾刀：${halfNum}。`}</th></tr></thead><tbody>`;
     const tableEnd = '</tbody></table>';
     const tableRows = dataRows
         .sort((a, b) => b[2] * 300000000 + b[3] - a[2] * 300000000 - a[3])

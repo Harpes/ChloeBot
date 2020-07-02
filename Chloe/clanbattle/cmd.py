@@ -25,6 +25,10 @@ bot = nonebot.get_bot()
 battleObj = BattleMaster()
 
 
+def format_num(value) -> str:
+    return '{:,}'.format(value)
+
+
 def translate_time_str(value: datetime, f: str = '%Y%m%d%H%M') -> str:
     return value.strftime(f)
 
