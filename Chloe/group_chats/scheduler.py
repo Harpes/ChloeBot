@@ -1,5 +1,6 @@
 import datetime
 import json
+from os import path
 
 import nonebot
 from aiohttp import ClientSession
@@ -27,7 +28,8 @@ async def scheduler_reminder(msg: str):
 # 0800
 @nonebot.scheduler.scheduled_job('cron', hour=8, minute=0)
 async def _():
-    msg = '骑士君早上好，当日活动：\n'
+    marker_path = path.join(path.dirname(__file__), "marker.png")
+    msg = f'[CQ:image,file=file:///{marker_path}]\n骑士君早上好，当日活动：\n'
 
     header = {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/63.0.3239.132 Safari/537.36',
