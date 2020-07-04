@@ -1,7 +1,9 @@
 import json
-from datetime import datetime, timedelta
+from datetime import datetime
 from os import path
 
+from . import add_clan as add_clan_def
+from . import get_clan as get_clan_def
 from . import get_start_of_day
 from .database.sqlite import DataBaseIO
 
@@ -46,31 +48,32 @@ class BattleMaster(object):
         return config[config["SCORE_RATE"][server]][stage - 1][boss - 1]
 
     def add_clan(self, gid: int, name: str, server: int):
-        self.databaseObj.addClan(gid, name, server)
+        add_clan_def(gid, name, server)
 
-    def get_clan(self, gid: int) -> (str, int) or None:
-        return self.databaseObj.getClan(gid)
+    def get_clan(self, gid: int) -> (str, int):
+        return get_clan_def(gid)
 
     def add_member(self, gid: int, uid: int, name: str):
-        self.databaseObj.addMember(gid, uid, name)
+        self.databaseObj.add_member(gid, uid, name)
+
+    def del_member(self, gid: int, uid: int):
+        self.databaseObj.del_member(gid, uid)
 
     def get_member_name(self, gid: int, uid: int) -> str or None:
-        member = self.databaseObj.getMember(gid, uid)
+        member = self.databaseObj.get_member(gid, uid)
         if len(member) == 0:
             return None
         else:
             return member[0][1]
 
     def list_member(self, gid: int) -> list:
-        return self.databaseObj.getMember(gid)
+        return self.databaseObj.get_member(gid)
 
     # (公会名, round, boss, hp) 公会名为None表示没有公会
     def get_current_state(self, gid: int) -> (str, int, int, int):
-        clan = self.get_clan(gid)
-        if clan is None:
+        name, server = self.get_clan(gid)
+        if name is None:
             return (None, -1, -1, -1)
-
-        name, server = clan
 
         recs = self.get_rec(gid)
         r, boss, dmg = 1, 1, 0
@@ -93,18 +96,51 @@ class BattleMaster(object):
 
         return (name, r, boss, hp)
 
+    def clear_progress(self, gid: int):
+        self.databaseObj.clear_rec(gid)
+        self.databaseObj.clear_enter(gid)
+
+    def add_rec(self, gid: int, uid: int, r: int, boss: int, dmg: int, flag: int, remark: dict = {}):
+        self.databaseObj.add_rec(
+            gid, uid, r, boss, dmg, flag, json.dumps(remark))
+
     def get_rec(self, gid: int, uid: int = None, start: datetime = None, end: datetime = None) -> list:
-        rec_cols = ['recid', 'gid', 'uid', 'time',
-                    'round', 'boss', 'dmg', 'flag']
-        recs = self.databaseObj.getRec(gid, uid, start, end)
-        results = [dict(zip(rec_cols, i)) for i in recs]
+        cols = ['recid', 'uid', 'time', 'round',
+                'boss', 'dmg', 'flag', 'remark']
+        recs = self.databaseObj.get_rec(gid, uid, start, end)
+        results = [dict(zip(cols, i)) for i in recs]
         _, server = self.get_clan(gid)
         for rec in results:
-            r, b, d = rec['round'], rec['boss'], rec['dmg']
+            r, b, d, remark = rec['round'], rec['boss'], rec['dmg'], rec['remark']
             rate = self.get_score_rate(r, b, server)
             rec['score'] = int(d * rate)
 
         return results
+
+    def delete_rec(self, gid: int, recid: int):
+        self.databaseObj.del_rec(gid, recid)
+
+    def add_enter(self, gid: int, uid: int, remark: str, flag: int = 0):
+        self.databaseObj.unvalid_enter(gid, uid)
+        self.databaseObj.add_enter(gid, uid, remark, flag)
+
+    def get_enter(self, gid: int) -> list:
+        cols = ['recid', 'uid', 'time', 'remark', 'flag', 'valid']
+        enters = self.databaseObj.get_enter(gid, start=get_start_of_day())
+        results = [dict(zip(cols, i)) for i in enters]
+        return results
+
+    def clear_enter(self, gid: int, uid: int = None):
+        self.databaseObj.unvalid_enter(gid, uid)
+
+    def add_reservation(self, gid: int, uid: int, boss: int):
+        self.databaseObj.add_reservation(gid, uid, boss)
+
+    def get_reservation(self, gid: int, boss: int = None) -> list:
+        return self.databaseObj.get_reservation(gid, boss)
+
+    def clear_reservation(self, gid: int, boss: int, uid: int = None):
+        self.databaseObj.clear_reservation(gid, boss, uid)
 
     # 获取当前的尾刀
     def get_kill_rec(self, gid: int) -> list:
@@ -131,14 +167,3 @@ class BattleMaster(object):
                 result = False
 
         return result
-
-    def add_rec(self, gid: int, uid: int, r: int, boss: int, dmg: int, flag: int):
-        self.databaseObj.addRec(gid, uid, r, boss, dmg, flag)
-
-    def delete_rec(self, gid: int, recid: int):
-        self.databaseObj.delRec(gid, recid)
-
-    def clear_rec(self, gid: int):
-        recs = self.get_rec(gid)
-        for r in recs:
-            self.delete_rec(gid, r['recid'])
