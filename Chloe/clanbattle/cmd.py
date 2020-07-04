@@ -16,9 +16,9 @@ server_http_adress = 'http://localhost:80'
 
 
 boss_names = ['树上', '一王', '二王', '三王', '四王', '五王']
-reservations_folder = 'reservations'
-if not os.path.exists(reservations_folder):
-    os.mkdir(reservations_folder)
+# reservations_folder = 'reservations'
+# if not os.path.exists(reservations_folder):
+#     os.mkdir(reservations_folder)
 
 
 bot = nonebot.get_bot()
@@ -27,14 +27,6 @@ battleObj = BattleMaster()
 
 def format_num(value) -> str:
     return '{:,}'.format(value)
-
-
-def translate_time_str(value: datetime, f: str = '%Y%m%d%H%M') -> str:
-    return value.strftime(f)
-
-
-def translate_str_time(value: str, f: str = '%Y%m%d%H%M') -> str:
-    return datetime.strptime(value, f)
 
 
 async def get_member_name(gid: int, uid: int) -> str:
@@ -57,17 +49,17 @@ async def add_clan(session: CommandSession, server: int):
     except Exception:
         name = str(gid)
 
-    clan = battleObj.get_clan(gid)
+    clan, _ = battleObj.get_clan(gid)
     if clan is None:
         battleObj.add_clan(gid, name, server)
     else:
-        await session.finish(f'创建公会失败，当前群已有公会[{clan[0]}]')
+        await session.finish(f'创建公会失败，当前群已有公会[{clan}]')
 
-    clan = battleObj.get_clan(gid)
+    clan, server = battleObj.get_clan(gid)
     if clan is None:
         await session.finish('创建公会失败')
     else:
-        await session.finish('创建%s服公会[%s]成功' % (['日', '台', '国'][clan[1]], clan[0]))
+        await session.finish('创建%s服公会[%s]成功' % (['日', '台', '国'][server], clan))
 
 
 @on_command('创建日服公会', permission=permission.GROUP_OWNER, shell_like=True, only_to_me=False)
@@ -99,9 +91,9 @@ async def show_progress(session: CommandSession):
                                boss_names[boss], '{:,}'.format(hp))
 
     splitters = '\n----------\n'
-    msgs_on_enter = await see_enter(gid)
-    if len(msgs_on_enter) > 0:
-        msg += splitters + '当前挑战中：\n' + msgs_on_enter
+    nums, enters = await see_enter(gid)
+    if nums > 0:
+        msg += splitters + f'当前{nums}人挑战中：\n' + enters
 
     await session.finish(msg)
 
@@ -110,7 +102,7 @@ async def show_progress(session: CommandSession):
 async def show_kill_rec(session: CommandSession):
     gid = session.ctx['group_id']
 
-    clan = battleObj.get_clan(gid)
+    clan, _ = battleObj.get_clan(gid)
     if clan is None:
         return
 
@@ -139,7 +131,7 @@ async def show_kill_rec(session: CommandSession):
 async def show_report_yesterday(session: CommandSession):
     gid = session.ctx['group_id']
 
-    clan = battleObj.get_clan(gid)
+    clan, _ = battleObj.get_clan(gid)
     if clan is None:
         return
 
@@ -165,7 +157,7 @@ async def show_report_yesterday(session: CommandSession):
 async def show_report(session: CommandSession):
     gid = session.ctx['group_id']
 
-    clan = battleObj.get_clan(gid)
+    clan, _ = battleObj.get_clan(gid)
     if clan is None:
         return
 
@@ -238,9 +230,6 @@ async def update_rec(gid: int, uid: int, dmg: int):
         await bot.send_group_msg(group_id=gid, message='你今天已经报满三刀了')
         return
 
-    del_enter(gid, uid)
-    cancel_reserve(gid, uid, 0)
-
     dmg_type, new_flag = '完整刀', rec_type
     if flag in [0, 2, 3]:
         dmg_type = ['完整刀', '尾刀'][rec_type]
@@ -258,14 +247,21 @@ async def update_rec(gid: int, uid: int, dmg: int):
                                 boss_names[after_boss], '{:,}'.format(after_hp))
 
     if prev_boss != after_boss:
-        clear_enter(gid)
-        on_tree = call_reserve(gid, 0)
-        if len(on_tree) > 0:
-            msg += f'\n----------\n可以下树了{on_tree}'
+        trees = ''
+        enters = battleObj.get_enter(gid)
+        for e in enters:
+            if e['flag'] == 1:
+                trees += str(MessageSegment.at(e['uid']))
+        if len(trees) > 0:
+            msg += f'\n----------\n可以下树了{trees}'
 
         on_reverse = call_reserve(gid, after_boss)
         if len(on_reverse) > 0:
             msg += f'\n----------\n{boss_names[after_boss]}已经出现{on_reverse}'
+
+        clear_enter(gid)
+
+    del_enter(gid, uid)
 
     await bot.send_group_msg(group_id=gid, message=msg)
 
@@ -276,7 +272,7 @@ async def handle_rec(context):
     gid = context['group_id']
     uid = context['user_id']
 
-    clan = battleObj.get_clan(gid)
+    clan, _ = battleObj.get_clan(gid)
     if clan is None:
         return
 
@@ -313,7 +309,7 @@ async def undo_rec(session: CommandSession):
     uid = context['user_id']
     auth = context['sender']['role']
 
-    clan = battleObj.get_clan(gid)
+    clan, _ = battleObj.get_clan(gid)
     if clan is None:
         return
 
@@ -342,75 +338,53 @@ async def undo_rec(session: CommandSession):
 
 psw = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'
 psw = ''.join(choices(psw, k=6))
+
+
 @on_command('清空会战记录', aliases=('清除会战记录', '重置进度', '重置会战进度'), permission=permission.GROUP_OWNER | permission.GROUP_ADMIN, only_to_me=False)
 async def clear_rec(session: CommandSession):
     msg = session.get('message', prompt=f'此操作不可逆！请回复[{psw}]以重置会战进度').strip()
     if msg == psw:
         gid = session.ctx['group_id']
-        battleObj.clear_rec(gid)
+        battleObj.clear_progress(gid)
 
         await show_progress(session)
 
 
 def add_enter(gid: int, uid: int, msg: str = ''):
-    reservation_path = os.path.join(reservations_folder, f'{gid}.json')
-    reservation = {}
-    if os.path.exists(reservation_path):
-        reservation = json.load(open(reservation_path, 'r'))
-    enter_details = reservation.get('enters', {})
-    user_detail = [translate_time_str(datetime.now()), msg[:10]]
-    enter_details[str(uid)] = user_detail
-    reservation['enters'] = enter_details
-    json.dump(reservation, open(reservation_path, 'w'))
+    flag = 1 if msg == '挂树' else 0
+    battleObj.add_enter(gid, uid, msg, flag)
 
 
-async def see_enter(gid: int) -> str:
-    reservation_path = os.path.join(reservations_folder, f'{gid}.json')
-    reservation = {}
-    if os.path.exists(reservation_path):
-        reservation = json.load(open(reservation_path, 'r'))
-    enter_details = reservation.get('enters', {})
-
-    msgs = []
-    for uid, detail in enter_details.items():
-        user_name = await get_member_name(gid, int(uid))
-        kill = '*尾刀*' if battleObj.if_kill(gid, uid) else ''
-
-        time_str, m = detail
-        time_delta = (datetime.now() -
-                      translate_str_time(time_str)).total_seconds() / 60
-
-        msg = f'{kill}({int(time_delta)}分钟前){user_name}'
-        if m:
-            msg += '：' + m
-
-        msgs.append((msg, time_delta))
+async def see_enter(gid: int) -> (int, str):
+    enters = battleObj.get_enter(gid)
+    if len(enters) < 1:
+        return (0, '')
 
     def sort_by_minutes(elem):
         return elem[1]
 
+    msgs = []
+    for e in enters:
+        uid, time, remark = e['uid'], e['time'], e['remark']
+        user_name = await get_member_name(gid, uid)
+        kill_mark = '*尾刀*' if battleObj.if_kill(gid, uid) else ''
+        time_passed = (datetime.now() -
+                       datetime.strptime(time, '%Y/%m/%d %H:%M')).total_seconds() / 60
+        msg = f'{kill_mark}({int(time_passed)}分钟前){user_name}'
+        if remark:
+            msg += '：' + remark
+        msgs.append((msg, time_passed))
+
     msgs.sort(key=sort_by_minutes)
-    return '\n'.join([i[0] for i in msgs])
+    return (len(msgs), '\n'.join([i[0] for i in msgs]))
 
 
 def del_enter(gid: int, uid: int):
-    reservation_path = os.path.join(reservations_folder, f'{gid}.json')
-    reservation = {}
-    if os.path.exists(reservation_path):
-        reservation = json.load(open(reservation_path, 'r'))
-    enter_details = reservation.get('enters', {})
-    if str(uid) in enter_details:
-        del enter_details[str(uid)]
-        json.dump(reservation, open(reservation_path, 'w'))
+    battleObj.clear_enter(gid, uid)
 
 
 def clear_enter(gid: int):
-    reservation_path = os.path.join(reservations_folder, f'{gid}.json')
-    reservation = {}
-    if os.path.exists(reservation_path):
-        reservation = json.load(open(reservation_path, 'r'))
-    reservation['enters'] = {}
-    json.dump(reservation, open(reservation_path, 'w'))
+    battleObj.clear_enter(gid)
 
 
 @on_command('申请出刀', aliases=('我进了', '我上了'), permission=permission.GROUP, only_to_me=False)
@@ -419,7 +393,7 @@ async def _(session: CommandSession):
     gid = context['group_id']
     uid = context['user_id']
 
-    clan = battleObj.get_clan(gid)
+    clan, _ = battleObj.get_clan(gid)
     if clan is None:
         return
 
@@ -433,7 +407,7 @@ async def _(session: CommandSession):
     gid = context['group_id']
     uid = context['user_id']
 
-    clan = battleObj.get_clan(gid)
+    clan, _ = battleObj.get_clan(gid)
     if clan is None:
         return
 
@@ -448,7 +422,7 @@ async def _(session: CommandSession):
     uid = context['user_id']
     argv = session.argv
 
-    clan = battleObj.get_clan(gid)
+    clan, _ = battleObj.get_clan(gid)
     if clan is None:
         return
 
@@ -456,84 +430,86 @@ async def _(session: CommandSession):
         return
 
     add_enter(gid, uid, ' '.join(argv))
-    await session.finish('已为你记录出刀状态', at_sender=True)
+    await session.finish('已为你记录出刀状态。', at_sender=True)
+
+
+@on_command('挂树', aliases=('上树', '掛樹'), permission=permission.GROUP, only_to_me=False)
+async def up_tree(session: CommandSession):
+    context = session.ctx
+    gid = context['group_id']
+    uid = context['user_id']
+
+    clan, _ = battleObj.get_clan(gid)
+    if clan is None:
+        return
+
+    add_enter(gid, uid, '挂树')
+    await session.finish('成功上树。', at_sender=True)
+
+# @on_command('下树', permission=permission.GROUP, only_to_me=False)
+# async def down_tree(session: CommandSession):
+#     context = session.ctx
+#     gid = context['group_id']
+#     uid = context['user_id']
+#     del_enter(gid, uid)
+#     await session.finish('你已下树。', at_sender=True)
 
 
 def add_reserve(gid: int, uid: int, boss: int) -> str:
-    # 0：树，1-5：BOSS
-    reservation_path = os.path.join(reservations_folder, f'{gid}.json')
-    reservation = {}
-    if os.path.exists(reservation_path):
-        reservation = json.load(open(reservation_path, 'r'))
-    reservation_list = reservation.get(str(boss), [])
+    reservations = battleObj.get_reservation(gid, boss)
+    existed = False
+    for reserva in reservations:
+        if re[0] == uid:
+            existed = True
+            break
 
-    if uid in reservation_list:
-        if boss == 0:
-            return f'{str(MessageSegment.at(uid))} 你已上树'
+    if existed:
         return f'{str(MessageSegment.at(uid))} 你已预约过{boss_names[boss]}，请勿重复预约'
-    else:
-        reservation_list.append(uid)
-        reservation[str(boss)] = reservation_list
-        json.dump(reservation, open(reservation_path, 'w'))
 
-        if boss == 0:
-            add_enter(gid, uid, '挂树')
-            return f'{str(MessageSegment.at(uid))} 成功上树，当前树上人：{len(reservation_list)}'
-        return f'{str(MessageSegment.at(uid))} 你已成功预约{boss_names[boss]}，当前Boss预约人数：{len(reservation_list)}'
+    battleObj.add_reservation(gid, uid, boss)
+    return f'成功预约{boss_names[boss]}，当前Boss预约人数：{len(reservations) + 1}'
 
 
 def cancel_reserve(gid: int, uid: int, boss: int) -> str:
-    reservation_path = os.path.join(reservations_folder, f'{gid}.json')
-    reservation = {}
-    if os.path.exists(reservation_path):
-        reservation = json.load(open(reservation_path, 'r'))
-    reservation_list = reservation.get(str(boss), [])
+    reservations = battleObj.get_reservation(gid, boss)
+    existed = False
+    for reserva in reservations:
+        if re[0] == uid:
+            existed = True
+            break
 
-    if uid in reservation_list:
-        reservation_list.remove(uid)
-        reservation[str(boss)] = reservation_list
-        json.dump(reservation, open(reservation_path, 'w'))
+    if existed:
+        battleObj.clear_reservation(gid, boss, uid)
+        return f'已为你取消预约{boss_names[boss]}'
 
-        if boss == 0:
-            return f'{str(MessageSegment.at(uid))} 你已下树'
-        return f'{str(MessageSegment.at(uid))} 已为你取消预约{boss_names[boss]}'
-    else:
-        if boss == 0:
-            return f'{str(MessageSegment.at(uid))} 你尚未上树'
-        return f'{str(MessageSegment.at(uid))} 你尚未预约{boss_names[boss]}'
+    return f'你尚未预约{boss_names[boss]}'
 
 
-async def see_reserve(gid: int, boss: int) -> list:
-    reservation_path = os.path.join(reservations_folder, f'{gid}.json')
-    reservation = {}
-    if os.path.exists(reservation_path):
-        reservation = json.load(open(reservation_path, 'r'))
-    reservation_list = reservation.get(str(boss), [])
+async def see_reserve(gid: int) -> str:
+    reservations = battleObj.get_reservation(gid)
+    if len(reservations) < 1:
+        return '当前没有预约。'
 
-    msg = boss_names[boss] + f' {len(reservation_list)}人'
-    if len(reservation_list) > 0:
-        name_list = []
-        for uid in reservation_list:
-            member_name = await get_member_name(gid, uid)
-            name_list.append(member_name)
+    users = [[], [], [], [], [], []]
+    for reserva in reservations:
+        uid, boss = reserva
+        user_name = await get_member_name(gid, uid)
+        users[boss].append(user_name)
 
-        msg += f"：{'、'.join(name_list)}"
+    msg = '当前预约情况：\n'
+    for b, u in enumerate(users):
+        if len(u) > 0:
+            msg += f"{boss_names[b]}{len(u)}人：{'、'.join(u)}\n"
 
-    return msg
+    return msg[:-1]
 
 
 def call_reserve(gid: int, boss: int) -> str:
-    reservation_path = os.path.join(reservations_folder, f'{gid}.json')
-    reservation = {}
-    if os.path.exists(reservation_path):
-        reservation = json.load(open(reservation_path, 'r'))
-    reservation_list = reservation.get(str(boss), [])
-    reservation[str(boss)] = []
-    json.dump(reservation, open(reservation_path, 'w'))
+    reservations = battleObj.get_reservation(gid, boss)
 
     msg = ''
-    for uid in reservation_list:
-        msg += str(MessageSegment.at(uid))
+    for res in reservations:
+        msg += str(MessageSegment.at(res[0]))
 
     return msg
 
@@ -543,7 +519,7 @@ async def reserve(session: CommandSession, boss: int):
     gid = context['group_id']
     uid = context['user_id']
 
-    clan = battleObj.get_clan(gid)
+    clan, _ = battleObj.get_clan(gid)
     if clan is None:
         return
 
@@ -556,12 +532,9 @@ async def unreserve(session: CommandSession, boss: int):
     gid = context['group_id']
     uid = context['user_id']
 
-    clan = battleObj.get_clan(gid)
+    clan, _ = battleObj.get_clan(gid)
     if clan is None:
         return
-
-    if boss == 0:
-        del_enter(gid, uid)
 
     msg = cancel_reserve(gid, uid, boss)
     await session.finish(msg)
@@ -620,24 +593,6 @@ async def _(session: CommandSession):
 @on_command('预约查询', aliases=('查询预约', '查预约'), permission=permission.GROUP, only_to_me=False)
 async def get_reserve(session: CommandSession):
     gid = session.ctx['group_id']
-    msg = '当前各王预约：'
-    for i in range(1, 6):
-        msg += '\n' + await see_reserve(gid, i)
+    msg = await see_reserve(gid)
 
     await session.finish(msg)
-
-
-@on_command('挂树', aliases=('上树', '掛樹'), permission=permission.GROUP, only_to_me=False)
-async def up_tree(session: CommandSession):
-    await reserve(session, 0)
-
-
-@on_command('下树', permission=permission.GROUP, only_to_me=False)
-async def down_tree(session: CommandSession):
-    await unreserve(session, 0)
-
-
-@on_command('查树', permission=permission.GROUP, only_to_me=False)
-async def see_tree(session: CommandSession):
-    gid = session.ctx['group_id']
-    await session.finish(await see_reserve(gid, 0))
