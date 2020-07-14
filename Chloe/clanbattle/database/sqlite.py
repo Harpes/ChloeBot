@@ -69,7 +69,7 @@ class DataBaseIO(object):
     def add_rec(self, gid: int, uid: int, r: int, b: int, dmg: int, flag: int, remark: str):
         conn, table_name = self._create_rec(gid)
 
-        insert_sql = 'INSERT INTO %s VALUES (NULL, %s, "%s", %s, %s, %s, %s, "%s")' % (
+        insert_sql = '''INSERT INTO %s VALUES (NULL, %s, '%s', %s, %s, %s, %s, '%s')''' % (
             table_name, uid, datetime.now().strftime('%Y/%m/%d %H:%M'), r, b, dmg, flag, remark)
         conn.execute(insert_sql)
         conn.commit()
