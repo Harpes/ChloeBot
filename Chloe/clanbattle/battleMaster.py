@@ -114,6 +114,8 @@ class BattleMaster(object):
             r, b, d, remark = rec['round'], rec['boss'], rec['dmg'], rec['remark']
             rate = self.get_score_rate(r, b, server)
             rec['score'] = int(d * rate)
+            if remark:
+                rec['remark'] = json.loads(remark)
 
         return results
 

@@ -1,5 +1,4 @@
-import json
-import os
+import math
 import re
 from datetime import datetime, timedelta
 from random import choices
@@ -77,6 +76,83 @@ async def add_clan_cn(session: CommandSession):
     await add_clan(session, 2)
 
 
+def convertNums(value: str) -> float:
+    match = re.match(r'([0-9]+(\.?[0-9]+)?)([Ww万Kk千])?', value)
+    if not match:
+        return 1
+
+    unit = {
+        'W': 10000,
+        'w': 10000,
+        '万': 10000,
+        'k': 1000,
+        'K': 1000,
+        '千': 1000,
+    }.get(match.group(3), 1)
+    return float(match.group(1)) * unit
+
+
+def bc_calc_time_return(hp, dmg, remain) -> float:
+    return min(20 + 90 - hp / dmg * (90 - remain), 90)
+
+
+def bc_calc_hp(dmg, remain, t_return) -> int:
+    return round(dmg * (20 + 90 - t_return) / (90 - remain))
+
+
+@on_command('补偿刀', aliases=('补偿', '补偿刀计算', 'bc'), permission=permission.GROUP, shell_like=True, only_to_me=False)
+async def _(session: CommandSession):
+    gid = session.ctx['group_id']
+
+    clan = battleObj.get_clan(gid)
+    if clan is None or len(session.argv) < 1:
+        return
+
+    server = clan[1]
+    clan, round_, boss, hp = battleObj.get_current_state(gid)
+    dmg = battleObj.get_boss_hp(round_, boss, server)
+    time_remian, time_return = 0, 0
+
+    calc_type = 0
+
+    for para in session.argv:
+        para_name = para[0]
+        if para_name not in ['h', 'd', 't', 'r']:
+            return
+        para_value = convertNums(para[1:])
+
+        if para_name == 'h':
+            hp = int(para_value)
+        elif para_name == 'd':
+            dmg = int(para_value)
+        elif para_name == 't':
+            time_remian = int(para_value)
+            if time_remian > 90:
+                time_remian = 90
+        elif para_name == 'r':
+            time_return = para_value
+            if time_return > 90.0:
+                time_return = 90.0
+            calc_type = 1
+
+    if calc_type == 0:
+        # 根据剩余血量，过量伤害，余时，计算补偿刀时间
+        if dmg < hp:
+            await session.finish(f'伤害{format_num(dmg)}小于Boss血量{format_num(hp)}。', at_sender=True)
+        time_return = bc_calc_time_return(hp, dmg, time_remian)
+        msg = f'实际血量{format_num(hp)}，预计伤害{format_num(dmg)}，剩余时间{time_remian}秒。'
+        msg += '\n补偿刀返还时间{:.1f}秒。'.format(time_return)
+        await session.finish(msg, at_sender=True)
+
+    elif calc_type == 1:
+        # 根据伤害，余时，补偿刀时间，倒推需要的boss实际血量
+        result = bc_calc_hp(dmg, time_remian, time_return)
+        delta = hp - result
+        msg = f'预计伤害{format_num(dmg)}，余时{time_remian}秒，补偿刀{time_return}秒'
+        msg += f'\n需要Boss血量在{format_num(result)}以下。\n当前Boss{format_num(hp)}血，还需要削{format_num(delta)}血。'
+        await session.finish(msg, at_sender=True)
+
+
 @on_command('会战进度', aliases=('状态', '战况如何', '致远星战况如何'), permission=permission.GROUP, only_to_me=False)
 async def show_progress(session: CommandSession):
     gid = session.ctx['group_id']
@@ -113,9 +189,12 @@ async def show_kill_rec(session: CommandSession):
 
     msgs = [[] for _ in boss_names]
     for rec in recs:
-        uid, dmg, boss = rec['uid'], rec['dmg'], rec['boss']
+        uid, dmg, boss, remark = rec['uid'], rec['dmg'], rec['boss'], rec['remark']
         user_name = await get_member_name(gid, int(uid))
-        msgs[boss].append(f'{user_name}({int(dmg / 10000)}w)')
+        msg = f'{user_name}({int(dmg / 10000)}w)'
+        if 'remain' in remark:
+            msg = msg[:-1] + f" {remark['remain']}s)"
+        msgs[boss].append(msg)
 
     msg = f'当前共有{len(recs)}尾刀。'
     for i, m in enumerate(msgs):
@@ -191,33 +270,31 @@ async def show_report(session: CommandSession):
     await session.finish(msg)
 
 
-def add_rec(gid: int, uid: int, r: int, boss: int, dmg: int, flag: int = 0):
-    battleObj.add_rec(gid, uid, r, boss, dmg, flag)
+def add_rec(gid: int, uid: int, r: int, boss: int, dmg: int, flag: int = 0, remark: dict = {}):
+    battleObj.add_rec(gid, uid, r, boss, dmg, flag, remark)
     return battleObj.get_current_state(gid)
 
 
-async def update_rec(gid: int, uid: int, dmg: int):
-    msg = ''
+async def update_rec(gid: int, uid: int, dmg: int, remark: dict = {}):
     rec_type = 0
+    over_kill = -1
 
     member_name = battleObj.get_member_name(gid, uid)
     if member_name is None:
         battleObj.add_member(gid, uid, await get_member_name(gid, uid))
         member_name = battleObj.get_member_name(gid, uid)
 
-    msg += member_name
+    msg = member_name
 
     _, prev_round, prev_boss, prev_hp = battleObj.get_current_state(gid)
-    if dmg > prev_hp:
-        hp = '{:,}'.format(prev_hp)
-        await bot.send_group_msg(group_id=gid, message=f'伤害超过当前BOSS剩余血量{hp}，请修正。')
-        return
+
+    if dmg >= prev_hp:
+        over_kill = dmg
+        rec_type = 1
+        dmg = prev_hp
     if dmg == -1 or dmg == prev_hp:
         rec_type = 1
         dmg = prev_hp
-
-    msg += '对%d周目%s造成了%s伤害' % (prev_round,
-                               boss_names[prev_boss], '{:,}'.format(dmg))
 
     member_recs = battleObj.get_rec(gid, uid, get_start_of_day())
     member_today_rec_nums, flag = 0, 0
@@ -238,13 +315,25 @@ async def update_rec(gid: int, uid: int, dmg: int):
         dmg_type = ['余刀', '余尾刀'][rec_type]
         new_flag = 2 + rec_type
 
-    msg += '(今日第%d刀，%s)' % (member_today_rec_nums + 1, dmg_type)
+    msg += '对%d周目%s造成了%s伤害' % (prev_round,
+                               boss_names[prev_boss], format_num(dmg))
+    msg += '(今日第%d刀，%s)。' % (member_today_rec_nums + 1, dmg_type)
+    if new_flag == 1 and over_kill > 0:
+        time_remain = 0
+        if 'remain' in remark:
+            time_remain = remark['remain']
+
+        time_return = math.ceil(bc_calc_time_return(
+            prev_hp, over_kill, time_remain))
+        remark['remain'] = time_return
+        msg += '\n造成过量伤害%s，余时%s秒，补偿刀返还时间%s秒。' % (
+            format_num(over_kill), time_remain, time_return)
 
     msg += '\n----------\n'
     _, after_round, after_boss, after_hp = add_rec(
-        gid, uid, prev_round, prev_boss, dmg, new_flag)
-    msg += '当前%d周目%s，剩余血量%s' % (after_round,
-                                boss_names[after_boss], '{:,}'.format(after_hp))
+        gid, uid, prev_round, prev_boss, dmg, new_flag, remark)
+    msg += '当前%d周目%s，剩余血量%s。' % (after_round,
+                                 boss_names[after_boss], format_num(after_hp))
 
     if prev_boss != after_boss:
         trees = ''
@@ -257,7 +346,7 @@ async def update_rec(gid: int, uid: int, dmg: int):
 
         on_reverse = call_reserve(gid, after_boss)
         if len(on_reverse) > 0:
-            msg += f'\n----------\n{boss_names[after_boss]}已经出现{on_reverse}'
+            msg += f'\n----------\n新的{boss_names[after_boss]}已经出现{on_reverse}'
 
         clear_enter(gid)
 
@@ -266,8 +355,43 @@ async def update_rec(gid: int, uid: int, dmg: int):
     await bot.send_group_msg(group_id=gid, message=msg)
 
 
+async def handle_rec_report(msg: str, gid: int, uid: int):
+    dmg = -2
+    remark = {}
+
+    pattern = [
+        r'^[报報]刀 ?(\d+) ?(\d+)? ?$',
+        r'^(?:\[CQ:at,qq=(\d+)\]) ?(\d+) ?(\d+)? ?$',
+        r'^尾刀 ?(?:\[CQ:at,qq=(\d+)\])? ?$',
+        r'^(?:\[CQ:at,qq=(\d+)\]) ?尾刀$'
+    ]
+    for i, pa in enumerate(pattern):
+        match = re.match(pa, msg)
+        if match:
+            if i == 0:
+                dmg = int(match.group(1))
+                if match.group(2):
+                    remark['remain'] = int(match.group(2))
+            elif i == 1:
+                remark['reporter'] = uid
+                uid = match.group(1)
+                dmg = int(match.group(2))
+                if match.group(3):
+                    remark['remain'] = int(match.group(3))
+            elif i == 2 or i == 3:
+                dmg = -1
+                if match.group(1):
+                    remark['reporter'] = uid
+                    uid = match.group(1)
+
+            break
+
+    if dmg > -2:
+        await update_rec(gid, uid, dmg, remark)
+
+
 @bot.on_message('group')
-async def handle_rec(context):
+async def _(context):
     message = context['raw_message']
     gid = context['group_id']
     uid = context['user_id']
@@ -276,30 +400,7 @@ async def handle_rec(context):
     if clan is None:
         return
 
-    dmg = 0
-
-    dmg_report1 = re.match(r'^[报報]刀 ?(\d+) *$', message)
-    dmg_report2 = re.match(r'^(?:\[CQ:at,qq=(\d+)\]) ?(\d+) *$', message)
-    kill_report1 = re.match(r'^尾刀 ?(?:\[CQ:at,qq=(\d+)\])? *$', message)
-    kill_report2 = re.match(r'^(?:\[CQ:at,qq=(\d+)\]) ?尾刀$', message)
-
-    if dmg_report1:
-        dmg = int(dmg_report1.group(1))
-    elif dmg_report2:
-        uid = dmg_report2.group(1)
-        dmg = int(dmg_report2.group(2))
-    elif kill_report1:
-        dmg = -1
-        if kill_report1.group(1):
-            uid = kill_report1.group(1)
-    elif kill_report2:
-        dmg = -1
-        if kill_report2.group(1):
-            uid = kill_report2.group(1)
-    else:
-        return
-
-    await update_rec(gid, uid, dmg)
+    await handle_rec_report(message, gid, uid)
 
 
 @on_command('撤销', permission=permission.GROUP, only_to_me=False)
@@ -319,9 +420,13 @@ async def undo_rec(session: CommandSession):
         return
 
     last_rec = recs[-1]
-    recid, last_uid, r, boss, dmg = [last_rec[i]
-                                     for i in ['recid', 'uid', 'round', 'boss', 'dmg']]
-    if last_rec['uid'] != uid and auth == 'member':
+    recid, last_uid, r, boss, dmg, remark = [last_rec[i]
+                                             for i in ['recid', 'uid', 'round', 'boss', 'dmg', 'remark']]
+
+    reporter = last_uid
+    if remark and 'reporter' in remark:
+        reporter = remark['reporter']
+    if (last_uid != uid and reporter != uid) and auth == 'member':
         await session.finish('撤回别人的出刀记录需要管理权限。')
         return
 
