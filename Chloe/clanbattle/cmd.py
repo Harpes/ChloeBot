@@ -564,7 +564,7 @@ def add_reserve(gid: int, uid: int, boss: int) -> str:
     reservations = battleObj.get_reservation(gid, boss)
     existed = False
     for reserva in reservations:
-        if re[0] == uid:
+        if reserva[0] == uid:
             existed = True
             break
 
@@ -579,7 +579,7 @@ def cancel_reserve(gid: int, uid: int, boss: int) -> str:
     reservations = battleObj.get_reservation(gid, boss)
     existed = False
     for reserva in reservations:
-        if re[0] == uid:
+        if reserva[0] == uid:
             existed = True
             break
 
