@@ -611,6 +611,7 @@ async def see_reserve(gid: int) -> str:
 
 def call_reserve(gid: int, boss: int) -> str:
     reservations = battleObj.get_reservation(gid, boss)
+    battleObj.clear_reservation(gid, boss)
 
     msg = ''
     for res in reservations:
