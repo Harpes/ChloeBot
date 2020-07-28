@@ -175,7 +175,7 @@ Promise.all([recResponse, memResponse]).then(async ([recsRes, memRes]) => {
     const tableHead = `<table class="gridtable"><thead><tr><th></th><th>ID</th>
     <th>昵称</th><th>出刀</th><th>分数</th><th>伤害</th><th colspan="2">${timeRange.join(
         ' ~ '
-    )}</th><th>${`完整刀：${wholeNum}，尾刀：${halfNum}。`}</th></tr></thead><tbody>`;
+    )}</th><th colspan="2">${`完整刀：${wholeNum}，尾刀：${halfNum}。`}</th></tr></thead><tbody>`;
     const tableEnd = '</tbody></table>';
     const tableRows = dataRows
         .sort((a, b) => b[2] * 300000000 + b[3] - a[2] * 300000000 - a[3])
