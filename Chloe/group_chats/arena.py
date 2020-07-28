@@ -88,7 +88,7 @@ async def search_arena(session: CommandSession, region: int = 3):
         status += f'\n{entry["up"]}/{entry["down"]}'
 
         comments = entry['comment']
-        if len(comments) > 0:
+        if comments and len(comments) > 0:
             status += '：' + comments[0]['msg']
 
     pic_path = os.path.join(imgOut, f'{uid}.png')
