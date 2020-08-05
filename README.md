@@ -2,9 +2,15 @@
 
 A QQBot based on Nonebot for PCR clanbattle
 
+**2020 年 8 月 2 日 0 点，QQ 机器人框架相继停止维护。**
+**感谢 酷 Q 项目 和 CQHTTP 插件 的开发者们！感谢他们让 ChloeBot 得以诞生！**
+**ChloeBot 不再对酷 Q 进行支持**
+
 基于 [NoneBot](https://nonebot.cqp.moe/)框架的 pcr 公会战特化的 QQ 机器人
 
 ## 部署指南 - QuickStart
+
+**由于酷 Q 已停止维护，本指南已部分失效。您可以使用[CQHTTP Mirai](https://github.com/yyuueexxiinngg/cqhttp-mirai)。由于当前 mirai 仍不稳定（甚至删库跑路），请自行参考相应的文档进行部署，**
 
 1. 安装下列软件
 
