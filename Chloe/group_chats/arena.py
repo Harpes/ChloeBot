@@ -56,8 +56,8 @@ async def search_arena(session: CommandSession, region: int = 3):
     if len(defender) != len(set(defender)):
         await session.finish('编队中出现重复角色', at_sender=True)
 
-    if session.ctx['message_type'] == 'group':
-        await session.bot.set_group_ban(group_id=context['group_id'], user_id=uid, duration=60)
+    # if session.ctx['message_type'] == 'group':
+    #     await session.bot.set_group_ban(group_id=context['group_id'], user_id=uid, duration=60)
 
     res = await fetch_arena(defender, region)
 
@@ -87,9 +87,9 @@ async def search_arena(session: CommandSession, region: int = 3):
 
         status += f'\n{entry["up"]}/{entry["down"]}'
 
-        comments = entry['comment']
-        if comments and len(comments) > 0:
-            status += '：' + comments[0]['msg']
+        # comments = entry['comment']
+        # if comments and len(comments) > 0:
+        #     status += '：' + comments[0]['msg']
 
     pic_path = os.path.join(imgOut, f'{uid}.png')
     pic.save(pic_path, quality=100)
