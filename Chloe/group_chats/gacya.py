@@ -78,7 +78,7 @@ async def _(session: CommandSession):
     msg = ''
     if session.ctx['message_type'] == 'group':
         context = session.ctx
-        await session.bot.set_group_ban(group_id=context['group_id'], user_id=context['user_id'], duration=30)
+        # await session.bot.set_group_ban(group_id=context['group_id'], user_id=context['user_id'], duration=30)
         msg = '[CQ:at,qq={}] '.format(str(session.ctx['user_id']))
 
     once_more = True
@@ -129,7 +129,7 @@ async def _(session: CommandSession):
     msg = ''
     if session.ctx['message_type'] == 'group':
         context = session.ctx
-        await session.bot.set_group_ban(group_id=context['group_id'], user_id=context['user_id'], duration=30)
+        # await session.bot.set_group_ban(group_id=context['group_id'], user_id=context['user_id'], duration=30)
         msg = '[CQ:at,qq={}] '.format(str(context['user_id']))
 
     for x in range(10):
@@ -184,7 +184,7 @@ async def _(session: CommandSession):
     msg = ''
     if session.ctx['message_type'] == 'group':
         context = session.ctx
-        await session.bot.set_group_ban(group_id=context['group_id'], user_id=context['user_id'], duration=40)
+        # await session.bot.set_group_ban(group_id=context['group_id'], user_id=context['user_id'], duration=40)
         msg = '[CQ:at,qq={}] '.format(str(context['user_id']))
 
     once_more = True
@@ -239,7 +239,7 @@ async def _(session: CommandSession):
     msg = ''
     if session.ctx['message_type'] == 'group':
         context = session.ctx
-        await session.bot.set_group_ban(group_id=context['group_id'], user_id=context['user_id'], duration=40)
+        # await session.bot.set_group_ban(group_id=context['group_id'], user_id=context['user_id'], duration=40)
         msg = '[CQ:at,qq={}] '.format(str(context['user_id']))
 
     for i in range(30):
