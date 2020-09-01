@@ -1,4 +1,3 @@
-import asyncio
 import os
 import re
 import time
@@ -6,14 +5,14 @@ from json import loads
 
 import nonebot
 from aiohttp import ClientSession
-from nonebot import CommandSession, MessageSegment, on_command, permission
+from nonebot import CommandSession, on_command
 from PIL import Image
 
 from .chara import gen_chara_avatar, get_chara_id, get_chara_name
 
 bot = nonebot.get_bot()
 
-
+# https://pcrdfans.com/bot
 # 请自行前往作业网申请key
 API_KEY = ''
 
@@ -30,9 +29,19 @@ async def post_bytes(url, headers=None, data=None):
     return b
 
 
-@on_command('怎么解', only_to_me=False)
+@on_command('怎么解', aliases=('怎么拆', ), only_to_me=False)
 async def _(session: CommandSession):
-    await search_arena(session)
+    await search_arena(session, 3)
+
+
+@on_command('日怎么解', aliases=('日怎么拆', ), only_to_me=False)
+async def _(session: CommandSession):
+    await search_arena(session, 2)
+
+
+@on_command('B怎么解', aliases=('B怎么拆', ), only_to_me=False)
+async def _(session: CommandSession):
+    await search_arena(session, 4)
 
 
 async def search_arena(session: CommandSession, region: int = 3):
@@ -43,10 +52,12 @@ async def search_arena(session: CommandSession, region: int = 3):
     argv = re.sub(r'[?？，,_]', ' ', argv)
     argv = argv.split()
 
-    if 0 >= len(argv):
-        session.finish('请输入防守方角色，用空格隔开', at_sender=True)
-    if 5 < len(argv):
-        session.finish('编队不能多于5名角色', at_sender=True)
+    if len(argv) < 1:
+        await session.finish('请输入防守方角色，用空格隔开', at_sender=True)
+    elif len(argv) < 5:
+        await session.finish('当前不支持少于5人的查询，请挪步网页版进行查询', at_sender=True)
+    elif len(argv) > 5:
+        await session.finish('编队不能多于5名角色', at_sender=True)
 
     defender = [get_chara_id(name) for name in argv]
     for i, id_ in enumerate(defender):
@@ -63,7 +74,7 @@ async def search_arena(session: CommandSession, region: int = 3):
 
     if res['code']:
         print('\n\n', res, '\n\n')
-        session.finish('服务器返回数据错误，请联系开发人员')
+        session.finish(f"服务器返回错误{res['code']}，请联系开发人员")
 
     resolutions = res['data']['result'][:7]
     nums = len(resolutions)
@@ -86,10 +97,6 @@ async def search_arena(session: CommandSession, region: int = 3):
             pic.paste(avatar, (c * img_size, r * img_size))
 
         status += f'\n{entry["up"]}/{entry["down"]}'
-
-        # comments = entry['comment']
-        # if comments and len(comments) > 0:
-        #     status += '：' + comments[0]['msg']
 
     pic_path = os.path.join(imgOut, f'{uid}.png')
     pic.save(pic_path, quality=100)
