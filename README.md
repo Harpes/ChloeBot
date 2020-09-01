@@ -10,7 +10,7 @@ A QQBot based on Nonebot for PCR clanbattle
 
 ## 部署指南 - QuickStart
 
-**由于酷 Q 已停止维护，本指南已部分失效。您可以使用[CQHTTP Mirai](https://github.com/yyuueexxiinngg/cqhttp-mirai)。由于当前 mirai 仍不稳定（甚至删库跑路），请自行参考相应的文档进行部署，**
+**由于酷 Q 已停止维护，本指南已部分失效。您可以使用[CQHTTP Mirai](https://github.com/yyuueexxiinngg/cqhttp-mirai)或者[GO CQHTTP](https://github.com/Mrs4s/go-cqhttp)。由于当前 mirai 仍不稳定（甚至删库跑路），请自行参考相应的文档进行部署，**
 
 1. 安装下列软件
 
