@@ -73,8 +73,19 @@ async def search_arena(session: CommandSession, region: int = 3):
     res = await fetch_arena(defender, region)
 
     if res['code']:
-        print('\n\n', res, '\n\n')
-        session.finish(f"服务器返回错误{res['code']}，请联系开发人员")
+        err_code = res['code']
+        err_msg = f'服务器返回错误{err_code}，请联系开发人员。'
+
+        if err_code == 117:
+            err_msg = '高峰期服务器限流，请挪步网站自行查询。https://pcrdfans.com/battle'
+        elif err_code == 103:
+            err_msg = 'API Key失效，请联系开发人员。'
+        elif err_code == 129:
+            err_msg = 'API地址错误，请联系开发人员。'
+        elif err_code == 601:
+            err_msg = 'IP被ban，请联系开发人员。'
+
+        session.finish(err_msg)
 
     resolutions = res['data']['result'][:7]
     nums = len(resolutions)
