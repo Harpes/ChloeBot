@@ -15,9 +15,14 @@ async def _(context):
 
     if '抽' in message and '奖' in message:
         # ban_time = randint(120, 480)
-        ban_time = 0
+        ban_time = 153
         for _ in range(message.count('大')):
             ban_time += randint(7200, 14400)
+        for _ in range(message.count('中')):
+            ban_time += randint(900, 1800)
+        for _ in range(message.count('小')):
+            ban_time += randint(100, 200)
+
         if ban_time > 1:
             await bot.set_group_ban(group_id=group_id, user_id=user_id, duration=ban_time)
 
@@ -81,9 +86,11 @@ async def _(session: CommandSession):
         return
     target_id = target_id.group(1)
 
-    ban_time = randint(150, 480)
-    await bot.set_group_ban(group_id=group_id, user_id=user_id, duration=ban_time)
-    await bot.set_group_ban(group_id=group_id, user_id=int(target_id), duration=ban_time + randint(-120, 60))
+    t1 = randint(270, 480)
+    t2 = t1 + randint(-240, 60)
+
+    await bot.set_group_ban(group_id=group_id, user_id=user_id, duration=t1)
+    await bot.set_group_ban(group_id=group_id, user_id=int(target_id), duration=t2)
     await session.send(f'恭喜[CQ:at,qq={user_id}]成功带动了[CQ:at,qq={target_id}]的经济发展')
 
 
