@@ -42,27 +42,30 @@ async def decrease(session: NoticeSession):
 @on_command('前卫rank')
 async def _(session: CommandSession):
     path = os.path.join(os.path.dirname(__file__), "RF.png")
-    await session.send(f'無羽R17-3[CQ:image,file=file:///{path}]')
+    await session.send(f'無羽R17-4[CQ:image,file=file:///{path}]')
 
 
 @on_command('中卫rank')
 async def _(session: CommandSession):
     path = os.path.join(os.path.dirname(__file__), "RM.png")
-    await session.send(f'無羽R17-3[CQ:image,file=file:///{path}]')
+    await session.send(f'無羽R17-4[CQ:image,file=file:///{path}]')
 
 
 @on_command('后卫rank')
 async def _(session: CommandSession):
     path = os.path.join(os.path.dirname(__file__), "RB.png")
-    await session.send(f'無羽R17-3[CQ:image,file=file:///{path}]')
+    await session.send(f'無羽R17-4[CQ:image,file=file:///{path}]')
 
 
 @on_command('rank')
 async def _(session: CommandSession):
-    path1 = os.path.join(os.path.dirname(__file__), "Rank1.png")
-    path2 = os.path.join(os.path.dirname(__file__), "Rank2.png")
-    path3 = os.path.join(os.path.dirname(__file__), "Rank3.png")
-    await session.send(f'煌灵R17-3[CQ:image,file=file:///{path1}][CQ:image,file=file:///{path2}][CQ:image,file=file:///{path3}]')
+    path = os.path.join(os.path.dirname(__file__), "Rank.png")
+    await session.send(f'煌灵R17-4[CQ:image,file=file:///{path}]')
+
+    # path1 = os.path.join(os.path.dirname(__file__), "Rank1.png")
+    # path2 = os.path.join(os.path.dirname(__file__), "Rank2.png")
+    # path3 = os.path.join(os.path.dirname(__file__), "Rank3.png")
+    # await session.send(f'煌灵R17-3[CQ:image,file=file:///{path1}][CQ:image,file=file:///{path2}][CQ:image,file=file:///{path3}]')
 
 
 @on_command('黄骑充电')

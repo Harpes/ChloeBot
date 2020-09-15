@@ -72,7 +72,7 @@ async def _():
     await scheduler_reminder(msg)
 
 # 2330
-@nonebot.scheduler.scheduled_job('cron', hour=23, minute=30)
-async def _():
-    msg = '现在23:30，骑士君该睡觉了！'
-    await scheduler_reminder(msg)
+# @nonebot.scheduler.scheduled_job('cron', hour=23, minute=30)
+# async def _():
+#     msg = '现在23:30，骑士君该睡觉了！'
+#     await scheduler_reminder(msg)
