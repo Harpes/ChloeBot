@@ -4,7 +4,6 @@ from os import path
 
 import nonebot
 from aiohttp import ClientSession
-from nonebot import CommandSession, on_command
 
 bot = nonebot.get_bot()
 
@@ -21,7 +20,7 @@ async def scheduler_reminder(msg: str):
     for group in group_list:
         try:
             await bot.send_group_msg(group_id=group['group_id'], message=msg)
-        except:
+        except _:
             pass
 
 
