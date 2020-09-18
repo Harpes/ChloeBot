@@ -3,7 +3,6 @@ import math
 import os
 import random as rd
 
-import nonebot
 from nonebot import CommandSession, on_command, permission
 from PIL import Image
 
@@ -44,10 +43,6 @@ img_size = 60
 async def _(session: CommandSession):
     gacyaUp, gacyaFes, gacya3, gacya2, gacya1, pUp, pFes, p3, p2 = load_gacya_config()
 
-    msg = ''
-    if session.ctx['message_type'] == 'group':
-        msg = '[CQ:at,qq={}] '.format(str(session.ctx['user_id']))
-
     pic = ''
     i = rd.random() * 100
     if i <= pUp:
@@ -62,7 +57,7 @@ async def _(session: CommandSession):
         pic = gen_chara_avatar(rd.choice(gacya1), 1)
 
     pic.save(os.path.join(imgOut, 's.png'))
-    await session.send(msg + f'[CQ:image,file=file:///{os.path.join(imgOut, "s.png")}]')
+    await session.send(f'[CQ:image,file=file:///{os.path.join(imgOut, "s.png")}]', at_sender=True)
 
 
 @on_command('单抽到up', aliases=('單抽到up', ), only_to_me=False)
@@ -70,16 +65,11 @@ async def _(session: CommandSession):
     gacyaUp, gacyaFes, gacya3, _, _, pUp, pFes, p3, p2 = load_gacya_config()
 
     if pUp == 0:
-        session.finish('当前没有开放up角色')
+        await session.finish('当前没有开放up角色')
+        return
 
     result = []
     n3, n2, n1 = [0, 0, 0]
-
-    msg = ''
-    if session.ctx['message_type'] == 'group':
-        context = session.ctx
-        # await session.bot.set_group_ban(group_id=context['group_id'], user_id=context['user_id'], duration=30)
-        msg = '[CQ:at,qq={}] '.format(str(session.ctx['user_id']))
 
     once_more = True
     while once_more:
@@ -99,7 +89,7 @@ async def _(session: CommandSession):
         else:
             n1 += 1
 
-    msg += f'花费{n3 + n2 + n1}抽，获得{n3 * stones[0] + n2 * stones[1] + n1 * stones[2]}个无名之石'
+    msg = f'花费{n3 + n2 + n1}抽，获得{n3 * stones[0] + n2 * stones[1] + n1 * stones[2]}个无名之石'
 
     row_nums = math.ceil(pow(n3, 0.5))
     width = row_nums * img_size
@@ -111,12 +101,13 @@ async def _(session: CommandSession):
         col = index % row_nums
         row = index // row_nums
         background.paste(pic, (col * img_size, row * img_size))
-    background.save(imgOut + f'\\{name}.png', quality=100)
-    msg += f'\n[CQ:image,file=file:///{imgOut}\\{name}.png]'
 
+    output_path = os.path.join(imgOut, f'{name}.png')
+    background.save(output_path, quality=100)
+    msg += f'\n[CQ:image,file=file:///{output_path}]'
     msg += f'\n共计{n3}个三星，{n2}个两星，{n1}个一星'
 
-    await session.send(msg)
+    await session.send(msg, at_sender=True)
 
 
 @on_command('十连抽', aliases=('十連抽', ), only_to_me=False)
@@ -125,12 +116,6 @@ async def _(session: CommandSession):
 
     result = []
     n3, n2, n1 = [0, 0, 0]
-
-    msg = ''
-    if session.ctx['message_type'] == 'group':
-        context = session.ctx
-        # await session.bot.set_group_ban(group_id=context['group_id'], user_id=context['user_id'], duration=30)
-        msg = '[CQ:at,qq={}] '.format(str(context['user_id']))
 
     for x in range(10):
         i = rd.random() * 100
@@ -154,7 +139,7 @@ async def _(session: CommandSession):
                 result.append([rd.choice(gacya1), 1])
                 n1 += 1
 
-    msg += f'获得{n3 * stones[0] + n2 * stones[1] + n1 * stones[2]}个无名之石'
+    msg = f'获得{n3 * stones[0] + n2 * stones[1] + n1 * stones[2]}个无名之石'
 
     background = Image.new('RGB', (img_size * 5, img_size * 2), 'white')
     name = session.ctx['user_id']
@@ -165,10 +150,11 @@ async def _(session: CommandSession):
             pic = gen_chara_avatar(cha, star).resize((img_size, img_size))
             background.paste(pic, (x * img_size, y * img_size))
             a += 1
-    background.save(imgOut + f'\\{name}.png', quality=100)
-    msg += f'[CQ:image,file=file:///{imgOut}\\{name}.png]'
+    output_path = os.path.join(imgOut, f'{name}.png')
+    background.save(output_path, quality=100)
+    msg += f'[CQ:image,file=file:///{output_path}]'
 
-    await session.send(msg)
+    await session.send(msg, at_sender=True)
 
 
 @on_command('抽到up', only_to_me=False)
@@ -176,16 +162,11 @@ async def _(session: CommandSession):
     gacyaUp, gacyaFes, gacya3, _, _, pUp, pFes, p3, p2 = load_gacya_config()
 
     if pUp == 0:
-        session.finish('当前没有开放up角色')
+        await session.finish('当前没有开放up角色')
+        return
 
     result = []
     n3, n2, n1 = [0, 0, 0]
-
-    msg = ''
-    if session.ctx['message_type'] == 'group':
-        context = session.ctx
-        # await session.bot.set_group_ban(group_id=context['group_id'], user_id=context['user_id'], duration=40)
-        msg = '[CQ:at,qq={}] '.format(str(context['user_id']))
 
     once_more = True
     while once_more:
@@ -209,7 +190,7 @@ async def _(session: CommandSession):
                 else:
                     n1 += 1
 
-    msg += f'花费{n3 + n2 + n1}抽，获得{n3 * stones[0] + n2 * stones[1] + n1 * stones[2]}个无名之石'
+    msg = f'花费{n3 + n2 + n1}抽，获得{n3 * stones[0] + n2 * stones[1] + n1 * stones[2]}个无名之石'
 
     row_nums = math.ceil(pow(n3, 0.5))
     width = row_nums * img_size
@@ -221,12 +202,13 @@ async def _(session: CommandSession):
         col = index % row_nums
         row = index // row_nums
         background.paste(pic, (col * img_size, row * img_size))
-    background.save(imgOut + f'\\{name}.png', quality=100)
-    msg += f'\n[CQ:image,file=file:///{imgOut}\\{name}.png]'
 
+    output_path = os.path.join(imgOut, f'{name}.png')
+    background.save(output_path, quality=100)
+    msg += f'\n[CQ:image,file=file:///{output_path}]'
     msg += f'\n共计{n3}个三星，{n2}个两星，{n1}个一星'
 
-    await session.send(msg)
+    await session.send(msg, at_sender=True)
 
 
 @on_command('抽一井', only_to_me=False)
@@ -235,12 +217,6 @@ async def _(session: CommandSession):
 
     result = []
     n3, n2, n1 = [0, 0, 0]
-
-    msg = ''
-    if session.ctx['message_type'] == 'group':
-        context = session.ctx
-        # await session.bot.set_group_ban(group_id=context['group_id'], user_id=context['user_id'], duration=40)
-        msg = '[CQ:at,qq={}] '.format(str(context['user_id']))
 
     for i in range(30):
         for x in range(10):
@@ -262,7 +238,7 @@ async def _(session: CommandSession):
                 else:
                     n1 += 1
 
-    msg += f'花费{n3 + n2 + n1}抽，获得{n3 * stones[0] + n2 * stones[1] + n1 * stones[2]}个无名之石'
+    msg = f'花费{n3 + n2 + n1}抽，获得{n3 * stones[0] + n2 * stones[1] + n1 * stones[2]}个无名之石'
 
     row_nums = math.ceil(pow(n3, 0.5))
     width = row_nums * img_size
@@ -274,19 +250,21 @@ async def _(session: CommandSession):
         col = index % row_nums
         row = index // row_nums
         background.paste(pic, (col * img_size, row * img_size))
-    background.save(imgOut + f'\\{name}.png', quality=100)
-    msg += f'\n[CQ:image,file=file:///{imgOut}\\{name}.png]'
 
+    output_path = os.path.join(imgOut, f'{name}.png')
+    background.save(output_path, quality=100)
+    msg += f'\n[CQ:image,file=file:///{output_path}]'
     msg += f'\n共计{n3}个三星，{n2}个两星，{n1}个一星'
 
-    await session.send(msg)
+    await session.send(msg, at_sender=True)
 
 
 @on_command('修改up', permission=permission.SUPERUSER, shell_like=True, only_to_me=False)
 async def _(session: CommandSession):
     chars = session.argv
     if len(chars) == 0:
-        session.finish('未输入角色。')
+        await session.finish('未输入角色。')
+        return
 
     edit_gacya_config('gacyaUp', chars)
 
