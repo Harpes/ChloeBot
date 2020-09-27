@@ -6,7 +6,7 @@ from json import loads
 import nonebot
 from aiohttp import ClientSession
 from nonebot import CommandSession, on_command
-from PIL import Image
+from PIL import Image, ImageFont, ImageDraw
 
 from .chara import gen_chara_avatar, get_chara_id, get_chara_name
 
@@ -22,7 +22,12 @@ if not os.path.exists(imgOut):
     os.mkdir(imgOut)
 
 
+font = ImageFont.truetype(
+    'Andale Mono.ttf', int(img_size / 4))
+
+
 async def post_bytes(url, headers=None, data=None):
+    # b = None
     async with ClientSession() as asyncsession:
         async with asyncsession.post(url, headers=headers, json=data) as response:
             b = await response.read()
@@ -72,9 +77,15 @@ async def search_arena(session: CommandSession, region: int = 3):
 
     res = await fetch_arena(defender, region)
 
+    if not isinstance(res, dict):
+        await session.finish('服务器返回错误，请联系开发人员。')
+        print(res)
+        return
+
     if res['code']:
         err_code = res['code']
         err_msg = f'服务器返回错误{err_code}，请联系开发人员。'
+        print('err response', res)
 
         if err_code == 117:
             err_msg = '高峰期服务器限流，请挪步网站自行查询。https://pcrdfans.com/battle'
@@ -85,7 +96,8 @@ async def search_arena(session: CommandSession, region: int = 3):
         elif err_code == 601:
             err_msg = 'IP被ban，请联系开发人员。'
 
-        session.finish(err_msg)
+        await session.finish(err_msg)
+        return
 
     resolutions = res['data']['result'][:7]
     nums = len(resolutions)
@@ -95,8 +107,9 @@ async def search_arena(session: CommandSession, region: int = 3):
     msg = '已找到以下解法：\n防守[' + \
         ' '.join([get_chara_name(i) for i in defender]) + ']\n'
 
-    pic = Image.new('RGB', (img_size * 5, img_size * nums), 'white')
-    status = 'Like & Dislike:'
+    pic = Image.new('RGBA', (img_size * (5 + 2), img_size * nums), 'white')
+    text_overlay = ImageDraw.Draw(pic)
+    # status = 'Like & Dislike:'
     for r, entry in enumerate(resolutions):
         atks = entry['atk']
         for c, a in enumerate(atks):
@@ -107,13 +120,16 @@ async def search_arena(session: CommandSession, region: int = 3):
                 charID), star, equip).resize((img_size, img_size))
             pic.paste(avatar, (c * img_size, r * img_size))
 
-        status += f'\n{entry["up"]}/{entry["down"]}'
+        text_overlay.text(
+            (5.2 * img_size, (r + 0.2) * img_size), f'Up:{entry["up"]}', (0, 0, 0), font=font)
+        text_overlay.text(
+            (5.2 * img_size, (r + 0.6) * img_size), f'Down:{entry["down"]}', (0, 0, 0), font=font)
 
     pic_path = os.path.join(imgOut, f'{uid}.png')
     pic.save(pic_path, quality=100)
-    msg += f'[CQ:image,file=file:///{pic_path}]\n' + status
+    msg += f'[CQ:image,file=file:///{pic_path}]'
     msg += '\nSupport by pcrdfans_com'
-    session.finish(msg, at_sender=True)
+    await session.finish(msg, at_sender=True)
 
 
 async def fetch_arena(defender: list, region: int):
@@ -124,6 +140,13 @@ async def fetch_arena(defender: list, region: int):
     payload = {'_sign': 'a', 'def': [i * 100 + 1 for i in defender], 'nonce': 'a',
                'page': 1, 'sort': 1, 'ts': int(time.time()), 'region': region}
     url = 'https://api.pcrdfans.com/x/v1/search'
-    res = await post_bytes(url, header, payload)
+    response = await post_bytes(url, header, payload)
 
-    return loads(str(res, 'utf8'))
+    res = {}
+    try:
+        res = loads(str(response, 'utf8'))
+    except BaseException as e:
+        print(e)
+        res = response
+
+    return res
