@@ -17,13 +17,14 @@ def load_gacya_config():
     config = json.load(
         open(os.path.join('config', 'gacya.json'), 'r', encoding='utf8'))
 
-    percents = [config['pUp'], config['pFes'], config['p3'], config['p2']]
+    percents = [config['up_prob'], config['fes_prob'],
+                config['s3_prob'], config['s2_prob']]
     pUp = percents[0]
     pFes = pUp + percents[1]
     p3 = pFes + percents[2]
     p2 = p3 + percents[3]
 
-    return [config['gacyaUp'], config['gacyaFes'], config['gacya3'], config['gacya2'], config['gacya1'], pUp, pFes, p3, p2]
+    return [config['up'], config['fes'], config['star3'], config['star2'], config['star1'], pUp, pFes, p3, p2]
 
 
 def edit_gacya_config(key: str, value):
@@ -44,7 +45,7 @@ async def _(session: CommandSession):
     gacyaUp, gacyaFes, gacya3, gacya2, gacya1, pUp, pFes, p3, p2 = load_gacya_config()
 
     pic = ''
-    i = rd.random() * 100
+    i = rd.random() * 1000
     if i <= pUp:
         pic = gen_chara_avatar(rd.choice(gacyaUp), 3)
     elif i <= pFes:
@@ -73,7 +74,7 @@ async def _(session: CommandSession):
 
     once_more = True
     while once_more:
-        i = rd.random() * 100
+        i = rd.random() * 1000
         if i <= pUp:
             result.append(rd.choice(gacyaUp))
             n3 += 1
@@ -118,7 +119,7 @@ async def _(session: CommandSession):
     n3, n2, n1 = [0, 0, 0]
 
     for x in range(10):
-        i = rd.random() * 100
+        i = rd.random() * 1000
         if i <= pUp:
             result.append([rd.choice(gacyaUp), 3])
             n3 += 1
@@ -171,7 +172,7 @@ async def _(session: CommandSession):
     once_more = True
     while once_more:
         for x in range(10):
-            i = rd.random() * 100
+            i = rd.random() * 1000
             if i <= pUp:
                 result.append(rd.choice(gacyaUp))
                 n3 += 1
@@ -220,7 +221,7 @@ async def _(session: CommandSession):
 
     for i in range(30):
         for x in range(10):
-            i = rd.random() * 100
+            i = rd.random() * 1000
             if i <= pUp:
                 result.append(rd.choice(gacyaUp))
                 n3 += 1

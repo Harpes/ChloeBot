@@ -82,7 +82,7 @@ async def search_arena(session: CommandSession, region: int = 3):
         print(res)
         return
 
-    if res['code']:
+    if res['code'] or res['data']['result'] is None:
         err_code = res['code']
         err_msg = f'服务器返回错误{err_code}，请联系开发人员。'
         print('err response', res)
@@ -99,10 +99,11 @@ async def search_arena(session: CommandSession, region: int = 3):
         await session.finish(err_msg)
         return
 
-    resolutions = res['data']['result'][:7]
-    nums = len(resolutions)
+    nums = len(res['data']['result'])
     if nums < 1:
         session.finish('没有找到解法，请随意解决', at_sender=True)
+
+    resolutions = res['data']['result'][:7]
 
     msg = '已找到以下解法：\n防守[' + \
         ' '.join([get_chara_name(i) for i in defender]) + ']\n'
@@ -116,8 +117,8 @@ async def search_arena(session: CommandSession, region: int = 3):
             charID = a['id'] // 100
             star = a['star']
             equip = a['equip']
-            avatar = gen_chara_avatar(get_chara_name(
-                charID), star, equip).resize((img_size, img_size))
+            avatar = gen_chara_avatar(
+                charID, star, equip).resize((img_size, img_size))
             pic.paste(avatar, (c * img_size, r * img_size))
 
         text_overlay.text(
