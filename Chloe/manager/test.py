@@ -1,4 +1,3 @@
-import nonebot
 from nonebot import CommandSession, on_command, permission
 
 

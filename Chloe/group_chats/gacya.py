@@ -6,16 +6,18 @@ import random as rd
 from nonebot import CommandSession, on_command, permission
 from PIL import Image
 
-from .chara import gen_chara_avatar
+from .chara import gen_chara_avatar, get_chara_id
 
 imgOut = os.path.join(os.path.dirname(__file__), 'out')
 if not os.path.exists(imgOut):
     os.mkdir(imgOut)
 
+gacya_path = os.path.join('config', 'gacya.json')
+
 
 def load_gacya_config():
     config = json.load(
-        open(os.path.join('config', 'gacya.json'), 'r', encoding='utf8'))
+        open(gacya_path, 'r', encoding='utf8'))
 
     percents = [config['up_prob'], config['fes_prob'],
                 config['s3_prob'], config['s2_prob']]
@@ -28,12 +30,10 @@ def load_gacya_config():
 
 
 def edit_gacya_config(key: str, value):
-    config = json.load(
-        open(os.path.join('config', 'gacya.json'), 'r', encoding='utf8'))
+    config = json.load(open(gacya_path, 'r', encoding='utf8'))
 
     config[key] = value
-    json.dump(config, open(os.path.join(
-        'config', 'gacya.json'), 'w', encoding='utf8'), ensure_ascii=False)
+    json.dump(config, open(gacya_path, 'w', encoding='utf8'), ensure_ascii=False)
 
 
 stones = [50, 10, 1]
@@ -267,11 +267,28 @@ async def _(session: CommandSession):
         await session.finish('未输入角色。')
         return
 
-    edit_gacya_config('gacyaUp', chars)
+    char_ids = [get_chara_id(name) for name in chars]
+    edit_gacya_config('up', char_ids)
 
     background = Image.new('RGB', (len(chars) * img_size, img_size), 'white')
-    for index, cha in enumerate(chars):
+    for index, cha in enumerate(char_ids):
         pic = gen_chara_avatar(cha, 3).resize((img_size, img_size))
         background.paste(pic, (index * img_size, 0))
     background.save(os.path.join(imgOut, 's.png'))
     await session.finish('Up角色已修改为\n' + f'[CQ:image,file=file:///{os.path.join(imgOut, "s.png")}]')
+
+
+@on_command('修改概率', permission=permission.SUPERUSER, shell_like=True, only_to_me=False)
+async def _(session: CommandSession):
+    probs = session.argv
+    if len(probs) == 0:
+        await session.finish('未输入概率。')
+        return
+
+    prob_indexs = ['up_prob', 'fes_prob', 's3_prob', 's2_prob']
+    for i, prob in enumerate(probs):
+        edit_gacya_config(prob_indexs[i], int(prob))
+
+    _, _, _, _, _, pUp, pFes, p3, p2 = load_gacya_config()
+    pUp, pFes, p3, p2 = map(lambda x: x / 10, [pUp, pFes, p3, p2])
+    await session.finish('当前抽卡概率为: up%.1f%%, fes%.1f%%, 三星%.1f%%, 两星%.1f%%' % (pUp, pFes - pUp, p3 - pFes, p2 - p3))
