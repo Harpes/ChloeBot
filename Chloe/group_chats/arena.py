@@ -99,11 +99,11 @@ async def search_arena(session: CommandSession, region: int = 3):
         await session.finish(err_msg)
         return
 
-    nums = len(res['data']['result'])
-    if nums < 1:
+    if len(res['data']['result']) < 1:
         session.finish('没有找到解法，请随意解决', at_sender=True)
 
     resolutions = res['data']['result'][:7]
+    nums = len(resolutions)
 
     msg = '已找到以下解法：\n防守[' + \
         ' '.join([get_chara_name(i) for i in defender]) + ']\n'
@@ -138,7 +138,7 @@ async def fetch_arena(defender: list, region: int):
         'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/81.0.4044.138 Safari/537.36 Edg/81.0.416.72',
         'authorization': API_KEY
     }
-    payload = {'_sign': 'a', 'def': [i * 100 + 1 for i in defender], 'nonce': 'a',
+    payload = {'_sign': 'a', 'def': [int(i) * 100 + 1 for i in defender], 'nonce': 'a',
                'page': 1, 'sort': 1, 'ts': int(time.time()), 'region': region}
     url = 'https://api.pcrdfans.com/x/v1/search'
     response = await post_bytes(url, header, payload)
