@@ -1,3 +1,4 @@
+import csv
 import json
 import re
 from io import BytesIO
@@ -5,12 +6,13 @@ from os import path
 
 import requests
 import zhconv
-from nonebot import CommandSession, on_command, permission
+from nonebot import scheduler
 from PIL import Image
 
 icon_url = 'https://redive.estertion.win/icon/unit/'
 res_path = 'res'
 icon_path = path.join(res_path, 'unit')
+chara_path = path.join('config', 'chara.json')
 CHARA = {}
 NAME2ID = {}
 
@@ -23,24 +25,49 @@ def normname(name: str) -> str:
 
 def load_Chara() -> dict:
     global CHARA, NAME2ID
-    CHARA = json.load(
-        open(path.join('config', 'chara.json'), 'r', encoding='utf8'))
+    CHARA = json.load(open(chara_path, 'r', encoding='utf8'))
+    NAME2ID = {}
 
-    for k, l in CHARA.items():
-        for n in l:
-            if n not in NAME2ID:
-                NAME2ID[normname(n)] = k
+    for id_, name_list in CHARA.items():
+        for n in name_list:
+            name = normname(n)
+            if name not in NAME2ID:
+                NAME2ID[name] = int(id_)
             else:
-                print(f'出现重名{n}于id{k}与id{NAME2ID[n]}')
+                print(f'出现重名{name}于id{id_}与id{NAME2ID[name]}')
+
+
+# @scheduler.scheduled_job('interval', seconds=10)
+@scheduler.scheduled_job('cron', hour=4)
+async def _():
+    new_chara = {"1000": ["未知角色", "未知キャラ", "unknown"]}
+    old_chara = json.load(open(chara_path, 'r', encoding='utf8'))
+    try:
+        with requests.get('https://raw.fastgit.org/pcrbot/pcr-nickname/master/nicknames.csv') as resp:
+            if resp.status_code != 200:
+                print('获取新名单错误', resp.status_code, resp)
+                return
+
+            reader = csv.reader(resp.text.strip().split('\n'))
+            for row in reader:
+                if row[0].isdigit():
+                    row[1], row[2] = row[2], row[1]
+                    name_row = list(map(lambda x: normname(
+                        x), row[1:] + old_chara.get(str(row[0]), [])))
+                    new_names = list(set(name_row))
+                    new_names.sort(key=name_row.index)
+                    new_chara[row[0]] = new_names
+
+    except Exception as ex:
+        print('更新角色名单错误')
+        print(ex)
+        return
+
+    json.dump(new_chara, open(chara_path, 'w'), ensure_ascii=False)
+    load_Chara()
 
 
 load_Chara()
-
-
-@on_command('重载花名册', permission=permission.SUPERUSER)
-async def _(session: CommandSession):
-    load_Chara()
-    await session.finish('重载完成')
 
 gadget_star = Image.open(path.join(res_path, 'gadget', 'star.png'))
 gadget_pink = Image.open(path.join(res_path, 'gadget', 'star_pink.png'))
@@ -55,7 +82,7 @@ def get_chara_id(name: str) -> int:
 
 
 def get_chara_name(id_: int) -> str:
-    return CHARA.get(id_, [None, '未知角色'])[1]
+    return CHARA.get(id_, ['未知角色', ])[0]
 
 
 def get_chara_icon(id_: int, star: int = 3, download: bool = True) -> Image:

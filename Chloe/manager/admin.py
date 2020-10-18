@@ -1,5 +1,4 @@
-import nonebot
-from nonebot import on_command, CommandSession, permission
+from nonebot import CommandSession, on_command, permission
 
 
 @on_command('查询群信息', permission=permission.SUPERUSER)
