@@ -1,14 +1,14 @@
+import json
 import os
 import re
 import time
-from json import loads
 
 import nonebot
 from aiohttp import ClientSession
 from nonebot import CommandSession, on_command
-from PIL import Image, ImageFont, ImageDraw
+from PIL import Image, ImageDraw, ImageFont
 
-from .chara import gen_chara_avatar, get_chara_id, get_chara_name
+from .chara import gen_chara_avatar, get_chara_id, get_chara_name, res_path
 
 bot = nonebot.get_bot()
 
@@ -21,9 +21,12 @@ imgOut = os.path.join(os.path.dirname(__file__), 'out')
 if not os.path.exists(imgOut):
     os.mkdir(imgOut)
 
-
-font = ImageFont.truetype(
-    'Andale Mono.ttf', int(img_size / 4))
+icon_size = 16
+font = ImageFont.truetype('Microsoft Sans Serif.ttf', icon_size)
+thumbup = Image.open(os.path.join(res_path, 'gadget', 'thumbup.png')).resize(
+    (icon_size, icon_size))
+thumbdown = Image.open(os.path.join(
+    res_path, 'gadget', 'thumbdown.png')).resize((icon_size, icon_size))
 
 
 async def post_bytes(url, headers=None, data=None):
@@ -72,9 +75,6 @@ async def search_arena(session: CommandSession, region: int = 3):
     if len(defender) != len(set(defender)):
         await session.finish('编队中出现重复角色', at_sender=True)
 
-    # if session.ctx['message_type'] == 'group':
-    #     await session.bot.set_group_ban(group_id=context['group_id'], user_id=uid, duration=60)
-
     res = await fetch_arena(defender, region)
 
     if not isinstance(res, dict):
@@ -108,23 +108,27 @@ async def search_arena(session: CommandSession, region: int = 3):
     msg = '已找到以下解法：\n防守[' + \
         ' '.join([get_chara_name(i) for i in defender]) + ']\n'
 
-    pic = Image.new('RGBA', (img_size * (5 + 2), img_size * nums), 'white')
+    pic = Image.new('RGBA', (int(img_size * 6.4), img_size * nums), 'white')
     text_overlay = ImageDraw.Draw(pic)
     # status = 'Like & Dislike:'
     for r, entry in enumerate(resolutions):
         atks = entry['atk']
+        sx, sy = 5 * img_size, r * img_size
         for c, a in enumerate(atks):
             charID = a['id'] // 100
             star = a['star']
             equip = a['equip']
             avatar = gen_chara_avatar(
                 charID, star, equip).resize((img_size, img_size))
-            pic.paste(avatar, (c * img_size, r * img_size))
+            pic.paste(avatar, (c * img_size, sy))
 
+        gad = 7
+        pic.paste(thumbup, (sx + gad, sy + gad), thumbup)
         text_overlay.text(
-            (5.2 * img_size, (r + 0.2) * img_size), f'Up:{entry["up"]}', (0, 0, 0), font=font)
+            (sx + icon_size + gad * 2, sy + gad), str(entry['up']), (0, 0, 0), font=font)
+        pic.paste(thumbdown, (sx + gad, sy + icon_size + gad * 3), thumbdown)
         text_overlay.text(
-            (5.2 * img_size, (r + 0.6) * img_size), f'Down:{entry["down"]}', (0, 0, 0), font=font)
+            ((sx + icon_size + gad * 2, sy + icon_size + gad * 3)), str(entry['down']), (0, 0, 0), font=font)
 
     pic_path = os.path.join(imgOut, f'{uid}.png')
     pic.save(pic_path, quality=100)
@@ -145,7 +149,7 @@ async def fetch_arena(defender: list, region: int):
 
     res = {}
     try:
-        res = loads(str(response, 'utf8'))
+        res = json.loads(str(response, 'utf8'))
     except BaseException as e:
         print(e)
         res = response
