@@ -58,12 +58,16 @@ async def _():
                     new_names.sort(key=name_row.index)
                     new_chara[row[0]] = new_names
 
+        json.dump(new_chara, open(chara_path, 'w',
+                                  encoding='utf8'), ensure_ascii=False)
+
     except Exception as ex:
         print('更新角色名单错误')
         print(ex)
+        json.dump(old_chara, open(chara_path, 'w',
+                                  encoding='utf8'), ensure_ascii=False)
         return
 
-    json.dump(new_chara, open(chara_path, 'w'), ensure_ascii=False)
     load_Chara()
 
 
@@ -82,7 +86,7 @@ def get_chara_id(name: str) -> int:
 
 
 def get_chara_name(id_: int) -> str:
-    return CHARA.get(id_, ['未知角色', ])[0]
+    return CHARA.get(str(id_), ['未知角色', ])[0]
 
 
 def get_chara_icon(id_: int, star: int = 3, download: bool = True) -> Image:
