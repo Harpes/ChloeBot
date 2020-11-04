@@ -14,14 +14,11 @@ __plugin_name__ = 'clanbattle'
 server_http_adress = 'http://localhost:80'
 
 
-boss_names = ['树上', '一王', '二王', '三王', '四王', '五王']
-# reservations_folder = 'reservations'
-# if not os.path.exists(reservations_folder):
-#     os.mkdir(reservations_folder)
-
-
 bot = nonebot.get_bot()
 battleObj = BattleMaster()
+
+boss_names = ['树上', '一王', '二王', '三王', '四王', '五王']
+reg_nums = r'([0-9]+(\.?[0-9]+)?)([Ww万Kk千])?'
 
 
 def format_num(value) -> str:
@@ -77,7 +74,7 @@ async def add_clan_cn(session: CommandSession):
 
 
 def convertNums(value: str) -> float:
-    match = re.match(r'([0-9]+(\.?[0-9]+)?)([Ww万Kk千])?', value)
+    match = re.match(reg_nums, value)
     if not match:
         return 1
 
@@ -153,15 +150,11 @@ async def _(session: CommandSession):
         await session.finish(msg, at_sender=True)
 
 
-@on_command('会战进度', aliases=('状态', '战况如何', '致远星战况如何'), permission=permission.GROUP, only_to_me=False)
-async def show_progress(session: CommandSession):
-    gid = session.ctx['group_id']
-
+async def get_progress_message(gid: int) -> str:
     clan, r, boss, hp = battleObj.get_current_state(gid)
 
     if clan is None:
-        await session.finish('当前群没有创建公会')
-        return
+        return '当前群没有创建公会'
 
     msg = '当前%d周目%s，剩余血量%s' % (r,
                                boss_names[boss], '{:,}'.format(hp))
@@ -171,6 +164,13 @@ async def show_progress(session: CommandSession):
     if nums > 0:
         msg += splitters + f'当前{nums}人挑战中：\n' + enters
 
+    return msg
+
+
+@on_command('会战进度', aliases=('状态', '战况如何', '致远星战况如何'), permission=permission.GROUP, only_to_me=False)
+async def _(session: CommandSession):
+    gid = session.ctx['group_id']
+    msg = await get_progress_message(gid)
     await session.finish(msg)
 
 
@@ -330,11 +330,10 @@ async def update_rec(gid: int, uid: int, dmg: int, remark: dict = {}):
             format_num(over_kill), time_remain, time_return)
 
     msg += '\n----------\n'
-    _, after_round, after_boss, after_hp = add_rec(
-        gid, uid, prev_round, prev_boss, dmg, new_flag, remark)
-    msg += '当前%d周目%s，剩余血量%s。' % (after_round,
-                                 boss_names[after_boss], format_num(after_hp))
+    msg += await get_progress_message(gid)
 
+    _, _, after_boss, _ = add_rec(
+        gid, uid, prev_round, prev_boss, dmg, new_flag, remark)
     if prev_boss != after_boss:
         trees = ''
         enters = battleObj.get_enter(gid)
@@ -435,24 +434,30 @@ async def undo_rec(session: CommandSession):
     msg = '已撤销%s对%s周目%s的%s伤害\n----------\n' % (
         u_name, r, boss_names[boss], '{:,}'.format(dmg))
     battleObj.delete_rec(gid, recid)
-    _, r, boss, hp = battleObj.get_current_state(gid)
-    msg += '当前%d周目%s，剩余血量%s' % (r, boss_names[boss], '{:,}'.format(hp))
+
+    msg += await get_progress_message(gid)
 
     await session.finish(msg)
 
 
-psw = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'
-psw = ''.join(choices(psw, k=6))
+psw = '0123456789'
+psw = ''.join(choices(psw, k=4))
 
 
 @on_command('清空会战记录', aliases=('清除会战记录', '重置进度', '重置会战进度'), permission=permission.GROUP_OWNER | permission.GROUP_ADMIN, only_to_me=False)
 async def clear_rec(session: CommandSession):
+    gid = session.ctx['group_id']
+
+    clan, _ = battleObj.get_clan(gid)
+    if clan is None:
+        return
+
     msg = session.get('message', prompt=f'此操作不可逆！请回复[{psw}]以重置会战进度').strip()
     if msg == psw:
-        gid = session.ctx['group_id']
         battleObj.clear_progress(gid)
 
-        await show_progress(session)
+        msg = await get_progress_message(gid)
+        await session.finish(msg)
 
 
 def add_enter(gid: int, uid: int, msg: str = ''):
@@ -532,6 +537,8 @@ async def _(session: CommandSession):
         return
 
     if len(argv) == 0:
+        msg = await get_progress_message(gid)
+        await session.finish(msg)
         return
 
     add_enter(gid, uid, ' '.join(argv))
@@ -550,14 +557,6 @@ async def up_tree(session: CommandSession):
 
     add_enter(gid, uid, '挂树')
     await session.finish('成功上树。', at_sender=True)
-
-# @on_command('下树', permission=permission.GROUP, only_to_me=False)
-# async def down_tree(session: CommandSession):
-#     context = session.ctx
-#     gid = context['group_id']
-#     uid = context['user_id']
-#     del_enter(gid, uid)
-#     await session.finish('你已下树。', at_sender=True)
 
 
 def add_reserve(gid: int, uid: int, boss: int) -> str:
@@ -595,7 +594,7 @@ async def see_reserve(gid: int) -> str:
     if len(reservations) < 1:
         return '当前没有预约。'
 
-    users = [[], [], [], [], [], []]
+    users = [[] for _ in boss_names]
     for reserva in reservations:
         uid, boss = reserva
         user_name = await get_member_name(gid, uid)

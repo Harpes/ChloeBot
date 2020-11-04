@@ -1,5 +1,3 @@
-import nonebot
-
 import Chloe
 import config
 
