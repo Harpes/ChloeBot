@@ -9,6 +9,8 @@ import zhconv
 from nonebot import scheduler
 from PIL import Image
 
+from .. import send_su_message
+
 icon_url = 'https://redive.estertion.win/icon/unit/'
 res_path = 'res'
 icon_path = path.join(res_path, 'unit')
@@ -23,7 +25,7 @@ def normname(name: str) -> str:
     return name
 
 
-def load_Chara() -> dict:
+def load_Chara():
     global CHARA, NAME2ID
     CHARA = json.load(open(chara_path, 'r', encoding='utf8'))
     NAME2ID = {}
@@ -34,7 +36,11 @@ def load_Chara() -> dict:
             if name not in NAME2ID:
                 NAME2ID[name] = int(id_)
             else:
-                print(f'出现重名{name}于id{id_}与id{NAME2ID[name]}')
+                msg = f'出现重名{name}于id{id_}与id{NAME2ID[name]}'
+                print(msg)
+
+
+load_Chara()
 
 
 # @scheduler.scheduled_job('interval', seconds=10)
@@ -42,36 +48,50 @@ def load_Chara() -> dict:
 async def _():
     new_chara = {"1000": ["未知角色", "未知キャラ", "unknown"]}
     old_chara = json.load(open(chara_path, 'r', encoding='utf8'))
+    delta_chara = {}
     try:
-        with requests.get('https://raw.fastgit.org/pcrbot/pcr-nickname/master/nicknames.csv') as resp:
-            if resp.status_code != 200:
-                print('获取新名单错误', resp.status_code, resp)
-                return
+        resp = requests.get(
+            'https://raw.fastgit.org/pcrbot/pcr-nickname/master/nicknames.csv')
+        if resp.status_code != 200:
+            print('获取新名单错误', resp.status_code, resp)
+            return
 
-            reader = csv.reader(resp.text.strip().split('\n'))
-            for row in reader:
-                if row[0].isdigit():
-                    row[1], row[2] = row[2], row[1]
-                    name_row = list(map(lambda x: normname(
-                        x), row[1:] + old_chara.get(str(row[0]), [])))
-                    new_names = list(set(name_row))
-                    new_names.sort(key=name_row.index)
-                    new_chara[row[0]] = new_names
+        reader = csv.reader(resp.text.strip().split('\n'))
+        for row in reader:
+            if row[0].isdigit():
+                chara_id, *fetch_names = row
+                fetch_names[0], fetch_names[1] = fetch_names[1], fetch_names[0]
+                old_names = old_chara.get(str(chara_id), [])
+                delta_names = []
 
-        json.dump(new_chara, open(chara_path, 'w',
-                                  encoding='utf8'), ensure_ascii=False)
+                for name in fetch_names:
+                    t_name = normname(name)
+                    if t_name not in old_names:
+                        delta_names.append(t_name)
+
+                new_chara[chara_id] = old_names + delta_names
+                if len(delta_names) > 0:
+                    delta_chara[chara_id] = delta_names
+
+        if delta_chara:
+            json.dump(new_chara, open(chara_path, 'w',
+                                      encoding='utf8'), ensure_ascii=False)
+            msg = '获取到新的角色名称'
+            for chara_id, d_names in delta_chara.items():
+                msg += f'\n「{str(chara_id)}」:{"、".join(d_names)}'
+            print(msg)
+            await send_su_message(msg)
 
     except Exception as ex:
-        print('更新角色名单错误')
         print(ex)
+        await send_su_message(f'更新角色名单错误 {str(ex)}')
         json.dump(old_chara, open(chara_path, 'w',
                                   encoding='utf8'), ensure_ascii=False)
+
         return
 
     load_Chara()
 
-
-load_Chara()
 
 gadget_star = Image.open(path.join(res_path, 'gadget', 'star.png'))
 gadget_pink = Image.open(path.join(res_path, 'gadget', 'star_pink.png'))

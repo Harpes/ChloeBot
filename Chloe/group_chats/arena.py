@@ -4,7 +4,7 @@ import re
 import time
 
 import nonebot
-from aiohttp import ClientSession
+import requests
 from nonebot import CommandSession, on_command
 from PIL import Image, ImageDraw, ImageFont
 
@@ -27,14 +27,6 @@ thumbup = Image.open(os.path.join(res_path, 'gadget', 'thumbup.png')).resize(
     (icon_size, icon_size))
 thumbdown = Image.open(os.path.join(
     res_path, 'gadget', 'thumbdown.png')).resize((icon_size, icon_size))
-
-
-async def post_bytes(url, headers=None, data=None):
-    # b = None
-    async with ClientSession() as asyncsession:
-        async with asyncsession.post(url, headers=headers, json=data) as response:
-            b = await response.read()
-    return b
 
 
 @on_command('怎么解', aliases=('怎么拆', ), only_to_me=False)
@@ -145,11 +137,11 @@ async def fetch_arena(defender: list, region: int):
     payload = {'_sign': 'a', 'def': [int(i) * 100 + 1 for i in defender], 'nonce': 'a',
                'page': 1, 'sort': 1, 'ts': int(time.time()), 'region': region}
     url = 'https://api.pcrdfans.com/x/v1/search'
-    response = await post_bytes(url, header, payload)
+    response = requests.post(url, json=payload, headers=header)
 
     res = {}
     try:
-        res = json.loads(str(response, 'utf8'))
+        res = json.loads(response.text, encoding='utf8')
     except BaseException as e:
         print(e)
         res = response

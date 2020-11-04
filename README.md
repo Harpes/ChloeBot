@@ -36,7 +36,7 @@ A QQBot based on Nonebot for PCR clanbattle
 3. 进入本项目的根目录，确认下列的 Python 依赖库已安装：
 
     - nonebot nonebot[scheduler]
-    - aiohttp
+    - requests
     - pillow
     - zhconv
 
@@ -78,12 +78,12 @@ A QQBot based on Nonebot for PCR clanbattle
 
 -   预约/取消预约 `预约<Boss编号>` / `取消<Boss编号>`：
 
-
     ```
     预约1
     取消2
     预约查询
     ```
+
     也可以使用`预约查询`查询当前各个 Boss 的预约情况。
 
 -   出刀状态记录：

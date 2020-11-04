@@ -20,5 +20,6 @@ def init(config) -> nonebot.NoneBot:
     return bot
 
 
-def get_bot() -> nonebot.NoneBot:
-    return nonebot.get_bot()
+async def send_su_message(msg: str):
+    bot = nonebot.get_bot()
+    await bot.send_private_msg(user_id=bot.config.SUPERUSERS[0], message=msg)
