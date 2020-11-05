@@ -1,4 +1,3 @@
-import json
 from datetime import datetime, timedelta
 
 from flask import Flask, abort, jsonify, render_template, request
@@ -31,7 +30,7 @@ def rec_main(group):
         title = f'公会 {name}'
 
         return render_template('index.html', title=title, render_type='recs')
-    except:
+    except Exception:
         abort(404)
 
 
@@ -47,7 +46,7 @@ def rec_mems(group, user):
         title = f'{user_name} 的出刀记录'
 
         return render_template('index.html', title=title, render_type='mems')
-    except:
+    except Exception:
         abort(404)
 
 
@@ -62,7 +61,7 @@ def get_recs(group):
         gid = decode(group)
 
         uid = request.args.get('uid')
-        if not uid is None:
+        if uid is not None:
             uid = decode(uid)
 
         date = request.args.get('date')
@@ -76,7 +75,7 @@ def get_recs(group):
             end = start + timedelta(days=1)
 
         recs = battleObj.get_rec(gid, uid, start, end)
-    except:
+    except Exception:
         abort(404)
 
     result = []
@@ -103,7 +102,7 @@ def get_members(group):
         for m in mems:
             uid, name = m
             result[encode(uid)] = name
-    except:
+    except Exception:
         abort(404)
 
     return jsonify(result)

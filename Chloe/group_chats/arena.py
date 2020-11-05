@@ -71,10 +71,8 @@ async def search_arena(session: CommandSession, region: int = 3):
 
     if not isinstance(res, dict):
         await session.finish('服务器返回错误，请联系开发人员。')
-        print(res)
-        return
 
-    if res['code'] or res['data']['result'] is None:
+    if res['code']:
         err_code = res['code']
         err_msg = f'服务器返回错误{err_code}，请联系开发人员。'
         print('err response', res)
@@ -89,10 +87,12 @@ async def search_arena(session: CommandSession, region: int = 3):
             err_msg = 'IP被ban，请联系开发人员。'
 
         await session.finish(err_msg)
-        return
+
+    if res['data']['result'] is None:
+        await session.finish('服务器返回错误0，请稍后重试')
 
     if len(res['data']['result']) < 1:
-        session.finish('没有找到解法，请随意解决', at_sender=True)
+        await session.finish('没有找到解法，请随意解决', at_sender=True)
 
     resolutions = res['data']['result'][:7]
     nums = len(resolutions)
@@ -130,10 +130,7 @@ async def search_arena(session: CommandSession, region: int = 3):
 
 
 async def fetch_arena(defender: list, region: int):
-    header = {
-        'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/81.0.4044.138 Safari/537.36 Edg/81.0.416.72',
-        'authorization': API_KEY
-    }
+    header = {'authorization': API_KEY}
     payload = {'_sign': 'a', 'def': [int(i) * 100 + 1 for i in defender], 'nonce': 'a',
                'page': 1, 'sort': 1, 'ts': int(time.time()), 'region': region}
     url = 'https://api.pcrdfans.com/x/v1/search'
