@@ -159,7 +159,7 @@ async def get_progress_message(gid: int) -> str:
     msg = '当前%d周目%s，剩余血量%s' % (r,
                                boss_names[boss], '{:,}'.format(hp))
 
-    splitters = '\n----------\n'
+    splitters = '\n---\n'
     nums, enters = await see_enter(gid)
     if nums > 0:
         msg += splitters + f'当前{nums}人挑战中：\n' + enters
@@ -329,9 +329,6 @@ async def update_rec(gid: int, uid: int, dmg: int, remark: dict = {}):
         msg += '\n造成过量伤害%s，余时%s秒，补偿刀返还时间%s秒。' % (
             format_num(over_kill), time_remain, time_return)
 
-    msg += '\n----------\n'
-    msg += await get_progress_message(gid)
-
     _, _, after_boss, _ = add_rec(
         gid, uid, prev_round, prev_boss, dmg, new_flag, remark)
     if prev_boss != after_boss:
@@ -341,15 +338,18 @@ async def update_rec(gid: int, uid: int, dmg: int, remark: dict = {}):
             if e['flag'] == 1:
                 trees += str(MessageSegment.at(e['uid']))
         if len(trees) > 0:
-            msg += f'\n----------\n可以下树了{trees}'
+            msg += f'\n---\n可以下树了{trees}'
 
         on_reverse = call_reserve(gid, after_boss)
         if len(on_reverse) > 0:
-            msg += f'\n----------\n新的{boss_names[after_boss]}已经出现{on_reverse}'
+            msg += f'\n---\n新的{boss_names[after_boss]}已经出现{on_reverse}'
 
         clear_enter(gid)
 
     del_enter(gid, uid)
+
+    msg += '\n---\n'
+    msg += await get_progress_message(gid)
 
     await bot.send_group_msg(group_id=gid, message=msg)
 
@@ -431,7 +431,7 @@ async def undo_rec(session: CommandSession):
 
     u_name = await get_member_name(gid, last_uid)
 
-    msg = '已撤销%s对%s周目%s的%s伤害\n----------\n' % (
+    msg = '已撤销%s对%s周目%s的%s伤害\n---\n' % (
         u_name, r, boss_names[boss], '{:,}'.format(dmg))
     battleObj.delete_rec(gid, recid)
 
