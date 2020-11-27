@@ -348,9 +348,10 @@ async def update_rec(gid: int, uid: int, dmg: int, remark: dict = {}):
 
     del_enter(gid, uid)
 
-    msg += '\n---\n'
-    msg += await get_progress_message(gid)
+    await bot.send_group_msg(group_id=gid, message=msg)
 
+    # msg += '\n---\n'
+    msg = await get_progress_message(gid)
     await bot.send_group_msg(group_id=gid, message=msg)
 
 
@@ -431,12 +432,13 @@ async def undo_rec(session: CommandSession):
 
     u_name = await get_member_name(gid, last_uid)
 
-    msg = '已撤销%s对%s周目%s的%s伤害\n---\n' % (
+    msg = '已撤销%s对%s周目%s的%s伤害' % (
         u_name, r, boss_names[boss], '{:,}'.format(dmg))
     battleObj.delete_rec(gid, recid)
 
-    msg += await get_progress_message(gid)
+    await session.send(msg)
 
+    msg = await get_progress_message(gid)
     await session.finish(msg)
 
 
