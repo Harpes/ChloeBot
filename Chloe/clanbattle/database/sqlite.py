@@ -122,7 +122,6 @@ class DataBaseIO(object):
         ]
         return self.__create_table(gid, 'enter', columns)
 
-    # flag: 0:正常 1:挂树
     def add_enter(self, gid: int, uid: int, remark: str, flag: int):
         conn, table_name = self._create_enter(gid)
 

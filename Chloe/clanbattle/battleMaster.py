@@ -100,6 +100,7 @@ class BattleMaster(object):
         self.databaseObj.clear_rec(gid)
         self.databaseObj.clear_enter(gid)
 
+    # flag: 0:正常刀 1:尾刀 2:余刀 3:余尾刀
     def add_rec(self, gid: int, uid: int, r: int, boss: int, dmg: int, flag: int, remark: dict = {}):
         self.databaseObj.add_rec(
             gid, uid, r, boss, dmg, flag, json.dumps(remark))
@@ -122,6 +123,7 @@ class BattleMaster(object):
     def delete_rec(self, gid: int, recid: int):
         self.databaseObj.del_rec(gid, recid)
 
+    # flag: 0:正常 1:挂树
     def add_enter(self, gid: int, uid: int, remark: str, flag: int = 0):
         self.databaseObj.unvalid_enter(gid, uid)
         self.databaseObj.add_enter(gid, uid, remark, flag)

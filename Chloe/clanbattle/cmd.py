@@ -159,10 +159,9 @@ async def get_progress_message(gid: int) -> str:
     msg = '当前%d周目%s，剩余血量%s' % (r,
                                boss_names[boss], '{:,}'.format(hp))
 
-    splitters = '\n---\n'
     nums, enters = await see_enter(gid)
     if nums > 0:
-        msg += splitters + f'当前{nums}人挑战中：\n' + enters
+        msg += f'\n{nums}人挑战中：\n' + enters
 
     return msg
 
@@ -232,7 +231,7 @@ async def show_report_yesterday(session: CommandSession):
     await session.finish(msg)
 
 
-@on_command('报告', aliases=('出刀统计', '今日报告'), permission=permission.GROUP, only_to_me=False)
+@on_command('报告', aliases=('出刀统计', '今日报告', 'bg', 'BG'), permission=permission.GROUP, only_to_me=False)
 async def show_report(session: CommandSession):
     gid = session.ctx['group_id']
 
@@ -260,7 +259,7 @@ async def show_report(session: CommandSession):
             whole_nums += 1
             half_nums -= 1
 
-    msg = '今日进度%s周目%s~%s周目%s，已出%s完整刀。' % (
+    msg = '今日进度%s周目%s~%s周目%s，已出%s整刀。' % (
         begin_round, boss_names[begin_boss], end_round, boss_names[end_boss], whole_nums)
     if half_nums != 0:
         msg = msg.replace("。", "，%s尾刀。" % (half_nums, ))
@@ -307,9 +306,9 @@ async def update_rec(gid: int, uid: int, dmg: int, remark: dict = {}):
         await bot.send_group_msg(group_id=gid, message='你今天已经报满三刀了')
         return
 
-    dmg_type, new_flag = '完整刀', rec_type
+    dmg_type, new_flag = '整刀', rec_type
     if flag in [0, 2, 3]:
-        dmg_type = ['完整刀', '尾刀'][rec_type]
+        dmg_type = ['整刀', '尾刀'][rec_type]
     else:
         # flag = 1
         dmg_type = ['余刀', '余尾刀'][rec_type]
@@ -338,11 +337,10 @@ async def update_rec(gid: int, uid: int, dmg: int, remark: dict = {}):
             if e['flag'] == 1:
                 trees += str(MessageSegment.at(e['uid']))
         if len(trees) > 0:
-            msg += f'\n---\n可以下树了{trees}'
+            msg += f'\n- 可以下树了{trees}'
 
         on_reverse = call_reserve(gid, after_boss)
-        if len(on_reverse) > 0:
-            msg += f'\n---\n新的{boss_names[after_boss]}已经出现{on_reverse}'
+        msg += f'\n- 新的{boss_names[after_boss]}已经出现{on_reverse}'
 
         clear_enter(gid)
 
@@ -350,9 +348,9 @@ async def update_rec(gid: int, uid: int, dmg: int, remark: dict = {}):
 
     await bot.send_group_msg(group_id=gid, message=msg)
 
-    # msg += '\n---\n'
-    msg = await get_progress_message(gid)
-    await bot.send_group_msg(group_id=gid, message=msg)
+    if prev_boss == after_boss:
+        msg = await get_progress_message(gid)
+        await bot.send_group_msg(group_id=gid, message=msg)
 
 
 async def handle_rec_report(msg: str, gid: int, uid: int):
@@ -510,7 +508,7 @@ async def _(session: CommandSession):
         return
 
     add_enter(gid, uid)
-    await session.finish('已为你记录出刀状态', at_sender=True)
+    await session.finish('已为你记录出刀状态。', at_sender=True)
 
 
 @on_command('取消出刀', aliases=('撤销出刀', ), permission=permission.GROUP, only_to_me=False)
@@ -524,10 +522,10 @@ async def _(session: CommandSession):
         return
 
     del_enter(gid, uid)
-    await session.finish('已为你取消出刀状态', at_sender=True)
+    await session.finish('已为你取消出刀状态。', at_sender=True)
 
 
-@on_command('暂停', aliases=('zt', 'ZT'), permission=permission.GROUP, shell_like=True, only_to_me=False)
+@on_command('zt', aliases=('ZT', ), permission=permission.GROUP, shell_like=True, only_to_me=False)
 async def _(session: CommandSession):
     context = session.ctx
     gid = context['group_id']
@@ -547,7 +545,7 @@ async def _(session: CommandSession):
     await session.finish('已为你记录出刀状态。', at_sender=True)
 
 
-@on_command('挂树', aliases=('上树', '掛樹'), permission=permission.GROUP, only_to_me=False)
+@on_command('挂树', aliases=('上树', '掛樹', '上樹'), permission=permission.GROUP, only_to_me=False)
 async def up_tree(session: CommandSession):
     context = session.ctx
     gid = context['group_id']
@@ -570,10 +568,10 @@ def add_reserve(gid: int, uid: int, boss: int) -> str:
             break
 
     if existed:
-        return f'{str(MessageSegment.at(uid))} 你已预约过{boss_names[boss]}，请勿重复预约'
+        return f'{str(MessageSegment.at(uid))} 你已预约过{boss_names[boss]}，请勿重复预约。'
 
     battleObj.add_reservation(gid, uid, boss)
-    return f'成功预约{boss_names[boss]}，当前Boss预约人数：{len(reservations) + 1}'
+    return f'成功预约{boss_names[boss]}，已预约人数：{len(reservations) + 1}。'
 
 
 def cancel_reserve(gid: int, uid: int, boss: int) -> str:
@@ -586,9 +584,9 @@ def cancel_reserve(gid: int, uid: int, boss: int) -> str:
 
     if existed:
         battleObj.clear_reservation(gid, boss, uid)
-        return f'已为你取消预约{boss_names[boss]}'
+        return f'已为你取消预约{boss_names[boss]}。'
 
-    return f'你尚未预约{boss_names[boss]}'
+    return f'你尚未预约{boss_names[boss]}。'
 
 
 async def see_reserve(gid: int) -> str:
@@ -602,12 +600,12 @@ async def see_reserve(gid: int) -> str:
         user_name = await get_member_name(gid, uid)
         users[boss].append(user_name)
 
-    msg = '当前预约情况：\n'
+    msg = '当前预约情况：'
     for b, u in enumerate(users):
         if len(u) > 0:
-            msg += f"{boss_names[b]}{len(u)}人：{'、'.join(u)}\n"
+            msg += f"\n{boss_names[b]}{len(u)}人：{'、'.join(u)}"
 
-    return msg[:-1]
+    return msg
 
 
 def call_reserve(gid: int, boss: int) -> str:

@@ -1,12 +1,13 @@
 import csv
 import json
 import re
+import traceback
 from io import BytesIO
-from os import path
+from os import path, remove
 
 import requests
 import zhconv
-from nonebot import scheduler
+from nonebot import CommandSession, on_command, permission, scheduler
 from PIL import Image
 
 from .. import send_su_message
@@ -30,6 +31,7 @@ def load_Chara():
     CHARA = json.load(open(chara_path, 'r', encoding='utf8'))
     NAME2ID = {}
 
+    err_msg = ''
     for id_, name_list in CHARA.items():
         for n in name_list:
             name = normname(n)
@@ -38,14 +40,45 @@ def load_Chara():
             else:
                 msg = f'出现重名{name}于id{id_}与id{NAME2ID[name]}'
                 print(msg)
+                err_msg += msg + '\n'
+
+    return err_msg[:-1]
 
 
 load_Chara()
 
 
+@on_command('更新花名册', permission=permission.SUPERUSER)
+async def _(session: CommandSession):
+    global CHARA
+
+    err_msg = await update_chara()
+    if err_msg:
+        await send_su_message(err_msg)
+
+    new_icons = []
+    for chara_id in CHARA.keys():
+        if chara_id == '1000':
+            continue
+
+        icons = download_unit_icon(int(chara_id), False)
+        new_icons.extend(icons)
+
+    if len(new_icons) > 0:
+        ile = 60
+        res_path = path.join(path.dirname(__file__), 'new.png')
+        pic = Image.new("RGB", (ile * len(new_icons), ile), 'white')
+        for i, p in enumerate(new_icons):
+            pic.paste(p.resize((ile, ile)), (i * ile, 0))
+
+        pic.save(res_path)
+        await send_su_message(f'获取到新头像[CQ:image,file=file:///{res_path}]')
+        remove(res_path)
+
+
 # @scheduler.scheduled_job('interval', seconds=10)
 @scheduler.scheduled_job('cron', hour=4)
-async def _():
+async def update_chara():
     new_chara = {"1000": ["未知角色", "未知キャラ", "unknown"]}
     old_chara = json.load(open(chara_path, 'r', encoding='utf8'))
     delta_chara = {}
@@ -79,18 +112,18 @@ async def _():
             msg = '获取到新的角色名称'
             for chara_id, d_names in delta_chara.items():
                 msg += f'\n「{str(chara_id)}」:{"、".join(d_names)}'
-            print(msg)
             await send_su_message(msg)
 
     except Exception as ex:
+        trace = traceback.format_exc()
         print(ex)
-        await send_su_message(f'更新角色名单错误 {str(ex)}')
+        await send_su_message(f'更新角色名单错误\n{trace}')
         json.dump(old_chara, open(chara_path, 'w',
                                   encoding='utf8'), ensure_ascii=False)
 
         return
 
-    load_Chara()
+    return load_Chara()
 
 
 gadget_star = Image.open(path.join(res_path, 'gadget', 'star.png'))
@@ -126,6 +159,7 @@ def get_chara_icon(id_: int, star: int = 3, download: bool = True) -> Image:
 def save_img(link: str, des: str):
     destination = path.join(icon_path, des)
     if path.exists(destination):
+        # print(des, 'existed, skiped.')
         return
 
     try:
@@ -136,18 +170,28 @@ def save_img(link: str, des: str):
     if resp.status_code == 200 and re.search(r'image', resp.headers['content-type'], re.I):
         img = Image.open(BytesIO(resp.content))
         img.save(destination)
-        print('下载到新文件', des)
+        # print('下载到新文件', des)
+        return img
 
 
 def gen_icon_filename(id_, pre, end):
     return f'{pre}{id_:0>4d}{end}'
 
 
-def download_unit_icon(id_: int):
-    for star in [1, 3, 6]:
+def download_unit_icon(id_: int, download_six: bool = True):
+    stars = [1, 3]
+    if download_six:
+        stars.append(6)
+
+    new_icons = []
+    for star in stars:
         link = gen_icon_filename(id_, '', f'{star}1.webp')
         des = gen_icon_filename(id_, 'icon_unit_', f'{star}1.png')
-        save_img(link, des)
+        res = save_img(link, des)
+        if res:
+            new_icons.append(res)
+
+    return new_icons
 
 
 def gen_chara_avatar(id_: int, star: int = 3, equip: bool = False) -> Image:

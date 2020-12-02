@@ -39,25 +39,25 @@ async def decrease(session: NoticeSession):
         await session.send(f'{name}({user_id}) 跑了')
 
 
-@on_command('前卫rank')
+@on_command('前卫rank', only_to_me=False)
 async def _(session: CommandSession):
     path = os.path.join(os.path.dirname(__file__), "RF.png")
     await session.send(f'無羽R17-5[CQ:image,file=file:///{path}]')
 
 
-@on_command('中卫rank')
+@on_command('中卫rank', only_to_me=False)
 async def _(session: CommandSession):
     path = os.path.join(os.path.dirname(__file__), "RM.png")
     await session.send(f'無羽R17-5[CQ:image,file=file:///{path}]')
 
 
-@on_command('后卫rank')
+@on_command('后卫rank', only_to_me=False)
 async def _(session: CommandSession):
     path = os.path.join(os.path.dirname(__file__), "RB.png")
     await session.send(f'無羽R17-5[CQ:image,file=file:///{path}]')
 
 
-@on_command('rank')
+@on_command('rank', only_to_me=False)
 async def _(session: CommandSession):
     path = os.path.join(os.path.dirname(__file__), "Rank.png")
     await session.send(f'煌灵R17-4[CQ:image,file=file:///{path}]')
