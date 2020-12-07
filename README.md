@@ -40,7 +40,7 @@ A QQBot based on Nonebot for PCR clanbattle
     - pillow
     - zhconv
 
-4. 最后，开启两个命令行窗口，分别运行 `main.py` 和 `httpServer.py` 两个文件即可
+4. 最后，开启两个命令行窗口，运行 `main.py` 即可
 
 ## 公会战指令
 
