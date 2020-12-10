@@ -82,9 +82,10 @@ async def update_chara():
     new_chara = {"1000": ["未知角色", "未知キャラ", "unknown"]}
     old_chara = json.load(open(chara_path, 'r', encoding='utf8'))
     delta_chara = {}
+
     try:
         resp = requests.get(
-            'https://raw.fastgit.org/pcrbot/pcr-nickname/master/nicknames.csv')
+            'https://raw.fastgit.org/pcrbot/pcr-nickname/master/nicknames_zh-cn.csv')
         if resp.status_code != 200:
             print('获取新名单错误', resp.status_code, resp)
             return
@@ -92,14 +93,14 @@ async def update_chara():
         reader = csv.reader(resp.text.strip().split('\n'))
         for row in reader:
             if row[0].isdigit():
-                chara_id, *fetch_names = row
-                fetch_names[0], fetch_names[1] = fetch_names[1], fetch_names[0]
+                chara_id, jp_name, cn_name, nicknames = row
+                fetch_names = [cn_name, jp_name] + nicknames.split(',')
                 old_names = old_chara.get(str(chara_id), [])
                 delta_names = []
 
                 for name in fetch_names:
                     t_name = normname(name)
-                    if t_name not in old_names:
+                    if t_name not in old_names and len(t_name) > 0:
                         delta_names.append(t_name)
 
                 new_chara[chara_id] = old_names + delta_names
