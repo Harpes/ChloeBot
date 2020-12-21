@@ -2,7 +2,7 @@ import nonebot
 from quart import jsonify, request
 from quart_compress import Compress
 
-from . import decode, encode
+from . import decode, encode, get_clan
 from .battleMaster import BattleMaster
 
 bot = nonebot.get_bot()
@@ -40,13 +40,14 @@ async def get_recs():
 @bot.server_app.route('/mems')
 async def get_mems():
     gid = request.args.get('g')
-    result = {}
 
     try:
         gid = decode(gid)
+        clan, _ = get_clan(gid)
+
+        result = {'name': clan or ''}
         mems = battleObj.list_member(gid)
         for uid, name in mems:
-            print(uid, name)
             result[encode(uid)] = name
 
         return jsonify(result)
