@@ -76,7 +76,7 @@ Promise.all([recResponse, memResponse]).then(async ([recsRes, memRes]) => {
         return false;
     }
 
-    const recType = ['完整刀', '尾刀', '余刀', '余尾刀'];
+    const recType = ['整刀', '尾刀', '余刀', '余尾刀'];
 
     const bossList = [];
     const uids = Object.keys(names);
