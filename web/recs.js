@@ -96,24 +96,14 @@ Promise.all([recResponse, memResponse]).then(async ([recsRes, memRes]) => {
         }
 
         const uidIndex = uids.indexOf(uid);
-        datas[uidIndex].push([
-            bossList.length - 1,
-            dmgStack,
-            dmg + dmgStack,
-            dmg,
-            time.slice(-5),
-        ]);
+        datas[uidIndex].push([bossList.length - 1, dmgStack, dmg + dmgStack, dmg, time.slice(-5)]);
         dmgStack += dmg;
 
         const row = [...dataRows[uidIndex]];
 
         row[3] += score;
         row[4] += dmg;
-        row.push(
-            `(${time.slice(-5)})${currentBoss.slice(-2)}${
-                recType[flag]
-            } ${toThousands(dmg)}`
-        );
+        row.push(`(${time.slice(-5)})${currentBoss.slice(-2)}${recType[flag]} ${toThousands(dmg)}`);
 
         if (flag === 0) {
             row.push('');
@@ -168,10 +158,7 @@ Promise.all([recResponse, memResponse]).then(async ([recsRes, memRes]) => {
     const barChart = echarts.init(document.getElementById('bar'));
     barChart.setOption(options);
 
-    const timeRange = [
-        recs[0]['time'].slice(-11),
-        recs[recs.length - 1]['time'].slice(-5),
-    ];
+    const timeRange = [recs[0]['time'].slice(-11), recs[recs.length - 1]['time'].slice(-5)];
     const tableHead = `<table class="gridtable"><thead><tr><th></th><th>ID</th>
     <th>昵称</th><th>出刀</th><th>分数</th><th>伤害</th><th colspan="2">${timeRange.join(
         ' ~ '
@@ -186,12 +173,7 @@ Promise.all([recResponse, memResponse]).then(async ([recsRes, memRes]) => {
             r[4] = toThousands(r[4]);
             return r;
         })
-        .map(
-            (r, i) =>
-                `<tr><td>${i + 1}</td>${r
-                    .map(c => `<td>${c}</td>`)
-                    .join('')}</tr>`
-        )
+        .map((r, i) => `<tr><td>${i + 1}</td>${r.map(c => `<td>${c}</td>`).join('')}</tr>`)
         .join('');
     tableElement.innerHTML = tableHead + tableRows + tableEnd;
 });

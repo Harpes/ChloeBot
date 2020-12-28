@@ -1,10 +1,5 @@
 import AppBar from '@material-ui/core/AppBar';
-import {
-    createStyles,
-    Theme,
-    WithStyles,
-    withStyles,
-} from '@material-ui/core/styles';
+import { createStyles, Theme, WithStyles, withStyles } from '@material-ui/core/styles';
 import Toolbar from '@material-ui/core/Toolbar';
 import Typography from '@material-ui/core/Typography';
 import React from 'react';
@@ -27,9 +22,7 @@ const DenseAppBar: React.FunctionComponent<Props> = ({ classes, title }) => {
         <div className={classes.root}>
             <AppBar position="static">
                 <Toolbar variant="dense">
-                    <Typography variant="h6" color="inherit">
-                        {title}
-                    </Typography>
+                    <Typography color="inherit">{title}</Typography>
                 </Toolbar>
             </AppBar>
         </div>
