@@ -9,7 +9,7 @@ import { getBossDisplayName, Mems, Recs } from '../utils';
 
 interface Props {
     recs: Array<Recs>;
-    mems: Mems;
+    mems: Omit<Mems, 'name'>;
 }
 
 const renderItem: EChartOption.SeriesCustom.RenderItem = (params, api) => {
@@ -42,22 +42,15 @@ const renderItem: EChartOption.SeriesCustom.RenderItem = (params, api) => {
     );
 };
 
-export const ProcessChart: React.FunctionComponent<Props> = ({
-    recs,
-    mems,
-}) => {
+const ProcessChart: React.FunctionComponent<Props> = ({ recs, mems }) => {
     const bossList: Array<string> = [];
     const uids = Object.keys(mems);
-    const datas: Array<
-        Array<[number, number, number, number, string]>
-    > = uids.map(_ => []);
+    const datas: Array<Array<[number, number, number, number, string]>> = uids.map(_ => []);
 
     let lastBoss = '',
-        dmgStack = 0,
-        wholeNum = 0,
-        halfNum = 0;
+        dmgStack = 0;
 
-    recs.forEach(({ boss, dmg, flag, round, time, uid }) => {
+    recs.forEach(({ boss, dmg, round, time, uid }) => {
         const currentBoss = `${round}周目${getBossDisplayName(round, boss)}`;
         if (currentBoss !== lastBoss) {
             lastBoss = currentBoss;
@@ -65,32 +58,17 @@ export const ProcessChart: React.FunctionComponent<Props> = ({
             bossList.push(currentBoss);
         }
 
-        datas[uids.indexOf(uid)].push([
-            bossList.length - 1,
-            dmgStack,
-            dmg + dmgStack,
-            dmg,
-            time.slice(-5),
-        ]);
+        datas[uids.indexOf(uid)].push([bossList.length - 1, dmgStack, dmg + dmgStack, dmg, time.slice(-5)]);
         dmgStack += dmg;
-
-        if (flag === 0) {
-            wholeNum += 1;
-        } else {
-            wholeNum += flag === 1 ? 0 : 1;
-            halfNum += flag === 1 ? 1 : -1;
-        }
     });
 
-    const series: Array<EChartOption.SeriesCustom> = uids.map(
-        (uid, uindex) => ({
-            name: mems[uid],
-            type: 'custom',
-            data: datas[uindex],
-            encode: { x: 0, y: [1, 2], tooltip: [3, 4] },
-            renderItem,
-        })
-    );
+    const series: Array<EChartOption.SeriesCustom> = uids.map((uid, uindex) => ({
+        name: mems[uid],
+        type: 'custom',
+        data: datas[uindex],
+        encode: { x: 0, y: [1, 2], tooltip: [3, 4] },
+        renderItem,
+    }));
     const option: EChartOption = {
         series,
         grid: {
@@ -120,11 +98,7 @@ export const ProcessChart: React.FunctionComponent<Props> = ({
         },
     };
 
-    return (
-        <ReactEchartsCore
-            style={{ height: '100%' }}
-            echarts={echarts}
-            option={option}
-        />
-    );
+    return <ReactEchartsCore style={{ height: '100%' }} echarts={echarts} option={option} />;
 };
+
+export default ProcessChart;
