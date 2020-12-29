@@ -3,20 +3,20 @@ import React, { useState } from 'react';
 
 import AppBar from '../../components/AppBar';
 import ProcessChart from '../../components/ProcessChart';
-import Table from '../../components/Table';
 import Selector from '../../components/Selector';
+import Table from '../../components/Table';
 import { getDayOfDateString, Mems, Recs } from '../../utils';
 
 type RouteParams = {
     gid: string;
 };
 
-interface PageProps {
+interface PageProps extends RouteParams {
     recs: Array<Recs>;
     mems: Mems;
 }
 
-const GroupPage: React.FunctionComponent<PageProps> = ({ recs, mems }) => {
+const GroupPage: React.FunctionComponent<PageProps> = ({ recs, mems, gid }) => {
     const groupName = mems.name;
     delete (mems as any).name;
     const recsMap: { [index: string]: PageProps['recs'] } = {};
@@ -41,16 +41,13 @@ const GroupPage: React.FunctionComponent<PageProps> = ({ recs, mems }) => {
 
     const dateOptions = dateList.map(value => ({ value, title: value }));
 
-    const width = '99%';
     return (
         <>
-            <AppBar title={groupName + ' 出刀记录'} />
-            <div style={{ width }}>
-                <Table mems={mems} recs={recsMap[currentDate]}>
-                    <Selector options={dateOptions} value={currentDate} setValue={setCurrentDate} />
-                </Table>
-            </div>
-            <div style={{ height: 600, width }}>
+            <AppBar title={`${groupName} 出刀记录`} />
+            <Table mems={mems} recs={recsMap[currentDate]} gid={gid}>
+                <Selector options={dateOptions} value={currentDate} setValue={setCurrentDate} />
+            </Table>
+            <div style={{ height: 600, width: '99%' }}>
                 <ProcessChart mems={mems} recs={recsMap[currentDate]} />
             </div>
         </>
@@ -66,7 +63,7 @@ export const getServerSideProps: GetServerSideProps<PageProps, RouteParams> = as
 
         if (recs && mems) {
             return {
-                props: { mems, recs },
+                props: { mems, recs, gid },
             };
         }
     }
@@ -75,6 +72,7 @@ export const getServerSideProps: GetServerSideProps<PageProps, RouteParams> = as
         props: {
             recs: [],
             mems: { name: '' },
+            gid: '',
         },
     };
 };
