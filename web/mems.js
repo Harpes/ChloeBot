@@ -23,17 +23,8 @@ function pad(num, n = 2) {
     return num;
 }
 function getDay(value) {
-    const [year, month, date, hour, min] = value
-        .replace(/\//g, ':')
-        .replace(' ', ':')
-        .split(':');
-    const datetime = new Date(
-        year,
-        parseInt(month) - 1,
-        date,
-        parseInt(hour) - 5,
-        min
-    );
+    const [year, month, date, hour, min] = value.replace(/\//g, ':').replace(' ', ':').split(':');
+    const datetime = new Date(year, parseInt(month) - 1, date, parseInt(hour) - 5, min);
 
     return `${pad(datetime.getMonth() + 1)}/${pad(datetime.getDate())}`;
 }
@@ -68,11 +59,7 @@ fetch(`/recs/${group}?uid=${user}`)
             const row = [...dataRows[rowIndex]];
             row[1] += score;
             row[2] += dmg;
-            row.push(
-                `(${time.slice(-5)})${getBossName(round, boss)}${
-                    recType[flag]
-                }\n${toThousands(dmg)}`
-            );
+            row.push(`(${time.slice(-5)})${getBossName(round, boss)}${recType[flag]}\n${toThousands(dmg)}`);
             if (flag === 0) row.push('');
             dataRows[rowIndex] = [...row];
         });

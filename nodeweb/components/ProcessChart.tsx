@@ -62,15 +62,14 @@ const ProcessChart: React.FunctionComponent<Props> = ({ recs, mems }) => {
         dmgStack += dmg;
     });
 
-    const series: Array<EChartOption.SeriesCustom> = uids.map((uid, uindex) => ({
-        name: mems[uid],
-        type: 'custom',
-        data: datas[uindex],
-        encode: { x: 0, y: [1, 2], tooltip: [3, 4] },
-        renderItem,
-    }));
     const option: EChartOption = {
-        series,
+        series: uids.map((uid, uindex) => ({
+            name: mems[uid],
+            type: 'custom',
+            data: datas[uindex],
+            encode: { x: 0, y: [1, 2], tooltip: [3, 4] },
+            renderItem,
+        })),
         grid: {
             left: '2%',
             right: '2%',

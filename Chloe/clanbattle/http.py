@@ -37,6 +37,20 @@ async def get_recs():
         return jsonify([])
 
 
+@bot.server_app.route('/mem')
+async def get_mem():
+    gid = request.args.get('g')
+    uid = request.args.get('u')
+
+    try:
+        gid = decode(gid)
+        uid = decode(uid)
+
+        return battleObj.get_member_name(gid, uid)
+    except Exception:
+        return ''
+
+
 @bot.server_app.route('/mems')
 async def get_mems():
     gid = request.args.get('g')
