@@ -223,9 +223,9 @@
   integrity sha1-9MfsQ+gbMZqYFRFQMXCfJph4kfA=
 
 "@types/node@^14.14.10":
-  version "14.14.14"
-  resolved "https://registry.npm.taobao.org/@types/node/download/@types/node-14.14.14.tgz#f7fd5f3cc8521301119f63910f0fb965c7d761ae"
-  integrity sha1-9/1fPMhSEwERn2ORDw+5ZcfXYa4=
+  version "14.14.16"
+  resolved "https://registry.npm.taobao.org/@types/node/download/@types/node-14.14.16.tgz#3cc351f8d48101deadfed4c9e4f116048d437b4b"
+  integrity sha1-PMNR+NSBAd6t/tTJ5PEWBI1De0s=
 
 "@types/prop-types@*":
   version "15.7.3"
