@@ -1,9 +1,11 @@
 import ReactEchartsCore from 'echarts-for-react/lib/core';
 import 'echarts/lib/chart/bar';
 import 'echarts/lib/chart/custom';
+import 'echarts/lib/component/legend';
 import 'echarts/lib/component/tooltip';
 import echarts, { EChartOption } from 'echarts/lib/echarts';
 import React from 'react';
+import 'zrender/lib/core/util';
 
 import { getBossDisplayName, Mems, Recs } from '../utils';
 
@@ -63,6 +65,7 @@ const ProcessChart: React.FunctionComponent<Props> = ({ recs, mems }) => {
     });
 
     const option: EChartOption = {
+        legend: {},
         series: uids.map((uid, uindex) => ({
             name: mems[uid],
             type: 'custom',

@@ -3,12 +3,12 @@ import Select from '@material-ui/core/Select';
 import React from 'react';
 
 interface Props {
-    options: Array<{ value: string; title: string }>;
     value: string;
     setValue: (value: string) => void;
+    children: JSX.Element[];
 }
 
-const NativeSelects: React.FunctionComponent<Props> = ({ options, value, setValue }) => {
+const NativeSelects: React.FunctionComponent<Props> = ({ value, setValue, children }) => {
     const handleChange = (event: any) => {
         const newValue = event.target.value;
         setValue(newValue);
@@ -17,11 +17,7 @@ const NativeSelects: React.FunctionComponent<Props> = ({ options, value, setValu
     return (
         <FormControl style={{ minWidth: 120, maxHeight: 24 }}>
             <Select native value={value} onChange={handleChange}>
-                {options.map(({ value, title }) => (
-                    <option key={value} value={value}>
-                        {title}
-                    </option>
-                ))}
+                {children}
             </Select>
         </FormControl>
     );
