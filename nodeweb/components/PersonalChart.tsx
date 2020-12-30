@@ -1,19 +1,20 @@
 import ReactEchartsCore from 'echarts-for-react/lib/core';
 import 'echarts/lib/chart/bar';
+import 'echarts/lib/component/legend';
 import 'echarts/lib/component/tooltip';
 import echarts, { EChartOption } from 'echarts/lib/echarts';
 import React from 'react';
+import 'zrender/lib/core/util';
 
-import { getDayOfDateString, Recs } from '../utils';
+import { color, getDayOfDateString, Recs } from '../utils';
 
 interface Props {
     recs: Array<Recs>;
 }
 
-const color = ['#c23531', '#2f4554', '#61a0a8', '#d48265', '#91c7ae'];
 const names = ['一王', '二王', '三王', '四王', '五王'];
 
-const PieChart: React.FunctionComponent<Props> = ({ recs }) => {
+const PersonalChart: React.FunctionComponent<Props> = ({ recs }) => {
     const bossScores: Array<Array<number>> = [[], [], [], [], []];
     const bossDmages: Array<Array<number>> = [[], [], [], [], []];
     const dateList: Array<string> = [];
@@ -36,6 +37,7 @@ const PieChart: React.FunctionComponent<Props> = ({ recs }) => {
     });
 
     const option: EChartOption<EChartOption.SeriesBar> = {
+        legend: {},
         series: [
             ...bossDmages.map((data, boss) => ({
                 name: `${names[boss]}伤害`,
@@ -81,4 +83,4 @@ const PieChart: React.FunctionComponent<Props> = ({ recs }) => {
     return <ReactEchartsCore style={{ height: 600 }} echarts={echarts} option={option} />;
 };
 
-export default PieChart;
+export default PersonalChart;

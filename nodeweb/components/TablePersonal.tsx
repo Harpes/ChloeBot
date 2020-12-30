@@ -1,22 +1,7 @@
 import React from 'react';
 
 import { getBossDisplayName, getDayOfDateString, Recs, recType, shortNumbers, toThousands } from '../utils';
-
-const headerStyle: React.CSSProperties = {
-    borderWidth: 1,
-    borderStyle: 'solid',
-    borderColor: '#666666',
-    backgroundColor: '#DEDEDE',
-    textAlign: 'center',
-};
-
-const cellStyle: React.CSSProperties = {
-    borderWidth: 1,
-    borderStyle: 'solid',
-    borderColor: '#666666',
-    backgroundColor: '#FFFFFF',
-    textAlign: 'right',
-};
+import { cellStyle, headerStyle } from './Table';
 
 interface Props {
     recs: Array<Recs>;

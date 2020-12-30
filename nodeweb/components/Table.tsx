@@ -3,7 +3,7 @@ import React from 'react';
 
 import { dataDesensitization, getBossDisplayName, Mems, Recs, recType, shortNumbers, toThousands } from '../utils';
 
-const headerStyle: React.CSSProperties = {
+export const headerStyle: React.CSSProperties = {
     borderWidth: 1,
     borderStyle: 'solid',
     borderColor: '#666666',
@@ -11,7 +11,8 @@ const headerStyle: React.CSSProperties = {
     textAlign: 'center',
 };
 
-const cellStyle: React.CSSProperties = {
+export const cellStyle: React.CSSProperties = {
+    padding: 2,
     borderWidth: 1,
     borderStyle: 'solid',
     borderColor: '#666666',
@@ -72,12 +73,12 @@ const Table: React.FunctionComponent<Props> = ({ recs, mems, gid, children }) =>
         return (
             <tr key={uid}>
                 {[
-                    index,
+                    index + 1,
                     dataDesensitization(uid),
                     <Link href={`${gid}/${uid}`}>{name}</Link>,
                     nums,
-                    toThousands(score),
-                    toThousands(dmg),
+                    shortNumbers(score),
+                    shortNumbers(dmg),
                     ...detail,
                 ].map(td)}
             </tr>
@@ -99,7 +100,7 @@ const Table: React.FunctionComponent<Props> = ({ recs, mems, gid, children }) =>
                     </th>
                     <th style={headerStyle} colSpan={2}>{`完整刀：${wholeNum}，尾刀：${halfNum}。`}</th>
                     {children ? (
-                        <th style={headerStyle} colSpan={3}>
+                        <th style={headerStyle} colSpan={2}>
                             {children}
                         </th>
                     ) : null}

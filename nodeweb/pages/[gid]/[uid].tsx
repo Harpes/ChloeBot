@@ -2,7 +2,7 @@ import { GetServerSideProps } from 'next';
 import React from 'react';
 
 import AppBar from '../../components/AppBar';
-import PercentChart from '../../components/PercentChart';
+import PersonalChart from '../../components/PersonalChart';
 import TablePersonal from '../../components/TablePersonal';
 import { Recs } from '../../utils';
 
@@ -23,7 +23,7 @@ const GroupPage: React.FunctionComponent<PageProps> = ({ recs, name }) => {
         <>
             <AppBar title={`${name} 出刀信息`} />
             <TablePersonal recs={recs} />
-            <PercentChart recs={recs} />
+            <PersonalChart recs={recs} />
         </>
     );
 };

@@ -1,10 +1,12 @@
 import { GetServerSideProps } from 'next';
-import React, { useState } from 'react';
+import React, { useCallback, useState } from 'react';
 
 import AppBar from '../../components/AppBar';
+import TotalChart from '../../components/TotalChart';
 import ProcessChart from '../../components/ProcessChart';
 import Selector from '../../components/Selector';
 import Table from '../../components/Table';
+import TableTotal from '../../components/TableTotal';
 import { getDayOfDateString, Mems, Recs } from '../../utils';
 
 type RouteParams = {
@@ -39,6 +41,16 @@ const GroupPage: React.FunctionComponent<PageProps> = ({ recs, mems, gid }) => {
 
     const [dateList, setDateList] = useState(newDateList);
     const [currentDate, setCurrentDate] = useState(newDateList[newDateList.length - 1]);
+    const [showAll, setShowAll] = useState(false);
+
+    const setOption = useCallback((optionValue: string) => {
+        if (optionValue === 'all') {
+            setShowAll(true);
+        } else {
+            setCurrentDate(optionValue);
+            setShowAll(false);
+        }
+    }, []);
 
     if (dateList.length !== newDateList.length) {
         setDateList(newDateList);
@@ -49,15 +61,39 @@ const GroupPage: React.FunctionComponent<PageProps> = ({ recs, mems, gid }) => {
         return null;
     }
 
-    const dateOptions = dateList.map(value => ({ value, title: value }));
+    const options = [
+        <option key="all" value="all">
+            全部
+        </option>,
+        ...dateList.map(value => (
+            <option key={value} value={value}>
+                {value}
+            </option>
+        )),
+    ];
 
     return (
         <>
-            <AppBar title={`${groupName} 出刀记录`} />
-            <Table mems={mems} recs={recsMap[currentDate]} gid={gid}>
-                <Selector options={dateOptions} value={currentDate} setValue={setCurrentDate} />
-            </Table>
-            <ProcessChart mems={mems} recs={recsMap[currentDate]} />
+            <AppBar title={`公会 ${groupName}`} />
+            {showAll ? (
+                <>
+                    <TableTotal mems={mems} recs={recs} gid={gid}>
+                        <Selector value="all" setValue={setOption}>
+                            {options}
+                        </Selector>
+                    </TableTotal>
+                    <TotalChart mems={mems} recs={recs} />
+                </>
+            ) : (
+                <>
+                    <Table mems={mems} recs={recsMap[currentDate]} gid={gid}>
+                        <Selector value={currentDate} setValue={setOption}>
+                            {options}
+                        </Selector>
+                    </Table>
+                    <ProcessChart mems={mems} recs={recsMap[currentDate]} />
+                </>
+            )}
         </>
     );
 };

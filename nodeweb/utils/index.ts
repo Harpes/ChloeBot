@@ -1,5 +1,7 @@
 import moment from 'moment';
 
+export const color = ['#c23531', '#2f4554', '#61a0a8', '#d48265', '#91c7ae'];
+
 const recTypeList = ['整刀', '尾刀', '余刀', '余尾刀'];
 export const recType = (flag: number) => recTypeList[flag];
 
@@ -57,12 +59,12 @@ export const dataDesensitization = (sourceStr: string) => {
 
 export const shortNumbers = (value: number) => {
     if (value > 100000000) {
-        return `${(value / 100000000).toFixed(2)}e`;
+        return `${(value / 100000000).toFixed(3)}e`;
     } else if (value > 10000) {
         return `${(value / 10000).toFixed(0)}w`;
     } else if (value > 1000) {
         return `${(value / 1000).toFixed(2)}k`;
     }
 
-    return `${toThousands(value)}`;
+    return `${value}`;
 };
