@@ -23,9 +23,7 @@ const GroupPage: React.FunctionComponent<PageProps> = ({ recs, name }) => {
         <>
             <AppBar title={`${name} 出刀信息`} />
             <TablePersonal recs={recs} />
-            <div style={{ height: 600, width: '99%', marginTop: 10 }}>
-                <PercentChart recs={recs} />
-            </div>
+            <PercentChart recs={recs} />
         </>
     );
 };

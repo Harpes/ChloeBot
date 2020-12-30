@@ -97,7 +97,7 @@ const ProcessChart: React.FunctionComponent<Props> = ({ recs, mems }) => {
         },
     };
 
-    return <ReactEchartsCore style={{ height: '100%' }} echarts={echarts} option={option} />;
+    return <ReactEchartsCore style={{ height: 600 }} echarts={echarts} option={option} />;
 };
 
 export default ProcessChart;

@@ -46,11 +46,23 @@ export const toThousands = (value: number) => {
     return result;
 };
 
-export const dataDesensitization = (uidStr: string) => {
-    const numStr = atob(uidStr);
+export const dataDesensitization = (sourceStr: string) => {
+    const numStr = Buffer.from(sourceStr, 'base64').toString();
     const len = numStr.length;
     if (len > 4) {
         return numStr.substring(0, 2) + '*' + numStr.substring(len - 3, len);
     }
     return numStr;
+};
+
+export const shortNumbers = (value: number) => {
+    if (value > 100000000) {
+        return `${(value / 100000000).toFixed(2)}e`;
+    } else if (value > 10000) {
+        return `${(value / 10000).toFixed(0)}w`;
+    } else if (value > 1000) {
+        return `${(value / 1000).toFixed(2)}k`;
+    }
+
+    return `${toThousands(value)}`;
 };

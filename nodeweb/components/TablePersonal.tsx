@@ -1,40 +1,30 @@
-import { createStyles, Theme, WithStyles, withStyles } from '@material-ui/core/styles';
 import React from 'react';
 
-import { getBossDisplayName, getDayOfDateString, Recs, recType, toThousands } from '../utils';
+import { getBossDisplayName, getDayOfDateString, Recs, recType, shortNumbers, toThousands } from '../utils';
 
-const styles = (_: Theme) =>
-    createStyles({
-        root: {
-            borderWidth: 1,
-            borderColor: '#666666',
-            borderCollapse: 'collapse',
-            fontSize: 14,
-        },
-        header: {
-            padding: 2,
-            borderWidth: 1,
-            borderStyle: 'solid',
-            borderColor: '#666666',
-            backgroundColor: '#DEDEDE',
-        },
-        cell: {
-            padding: 2,
-            borderWidth: 1,
-            borderStyle: 'solid',
-            borderColor: '#666666',
-            backgroundColor: '#FFFFFF',
-            textAlign: 'right',
-        },
-    });
+const headerStyle: React.CSSProperties = {
+    borderWidth: 1,
+    borderStyle: 'solid',
+    borderColor: '#666666',
+    backgroundColor: '#DEDEDE',
+    textAlign: 'center',
+};
 
-interface Props extends WithStyles<typeof styles> {
+const cellStyle: React.CSSProperties = {
+    borderWidth: 1,
+    borderStyle: 'solid',
+    borderColor: '#666666',
+    backgroundColor: '#FFFFFF',
+    textAlign: 'right',
+};
+
+interface Props {
     recs: Array<Recs>;
 }
 
-const Table: React.FunctionComponent<Props> = ({ classes, recs }) => {
-    const dataRows: Array<any> = [];
-    const totals = [0, 0, 0];
+const Table: React.FunctionComponent<Props> = ({ recs }) => {
+    const dataRows: any[] = [];
+    const totals: any[] = ['总计', 0, 0, 0];
 
     let currentDate = '';
     recs.forEach(({ boss, dmg, flag, score, round, time }) => {
@@ -46,24 +36,23 @@ const Table: React.FunctionComponent<Props> = ({ classes, recs }) => {
 
         const row = dataRows[dataRows.length - 1];
         row[2] += score;
-        totals[1] += score;
+        totals[2] += score;
         row[3] += dmg;
-        totals[2] += dmg;
+        totals[3] += dmg;
         row.push(`(${time.slice(-5)})${getBossDisplayName(round, boss)}${recType(flag)} ${toThousands(dmg)}`);
 
         if (flag === 0) {
             row.push('');
             row[1] += 1;
-            totals[0] += 1;
+            totals[1] += 1;
         } else {
             row[1] += 0.5;
-            totals[0] += 0.5;
+            totals[1] += 0.5;
         }
     });
-    dataRows.push(['总计', ...totals] as any);
 
     const td = (value: number | string, index: number) => (
-        <td key={`${index}`} className={classes.cell}>
+        <td key={`${index}`} style={cellStyle}>
             {value}
         </td>
     );
@@ -73,27 +62,36 @@ const Table: React.FunctionComponent<Props> = ({ classes, recs }) => {
     };
 
     return (
-        <table className={classes.root}>
+        <table style={{ borderWidth: 1, borderColor: '#666666', borderCollapse: 'collapse', fontSize: 14 }}>
             <thead>
                 <tr>
-                    <th className={classes.header}>日期</th>
-                    <th className={classes.header}>出刀</th>
-                    <th className={classes.header}>分数</th>
-                    <th className={classes.header}>伤害</th>
-                    <th colSpan={2} className={classes.header}>
+                    <th style={headerStyle}>日期</th>
+                    <th style={headerStyle}>出刀</th>
+                    <th style={headerStyle}>分数</th>
+                    <th style={headerStyle}>伤害</th>
+                    <th colSpan={2} style={headerStyle}>
                         1
                     </th>
-                    <th colSpan={2} className={classes.header}>
+                    <th colSpan={2} style={headerStyle}>
                         2
                     </th>
-                    <th colSpan={2} className={classes.header}>
+                    <th colSpan={2} style={headerStyle}>
                         3
                     </th>
                 </tr>
             </thead>
-            <tbody>{dataRows.map(renderRow)}</tbody>
+            <tbody>
+                {dataRows.map(renderRow)}
+                <tr>
+                    {totals.map((cv, index) => (
+                        <td style={headerStyle} key={`${index}`}>
+                            {index > 1 ? shortNumbers(cv) : cv}
+                        </td>
+                    ))}
+                </tr>
+            </tbody>
         </table>
     );
 };
 
-export default withStyles(styles)(Table);
+export default Table;

@@ -17,7 +17,7 @@ interface PageProps extends RouteParams {
 }
 
 const GroupPage: React.FunctionComponent<PageProps> = ({ recs, mems, gid }) => {
-    const groupName = mems.name;
+    const groupName = mems.name || '';
     delete (mems as any).name;
     const recsMap: { [index: string]: PageProps['recs'] } = {};
 
@@ -31,12 +31,22 @@ const GroupPage: React.FunctionComponent<PageProps> = ({ recs, mems, gid }) => {
         if (!recsMap[date]) recsMap[date] = [];
         recsMap[date].push(rec);
     });
+    const newDateList = Array.from(dateSet).sort();
 
-    const [dateList, setDateList] = useState(Array.from(dateSet).sort());
-    const [currentDate, setCurrentDate] = useState('2020/11/26');
+    if (!recs || recs.length < 1) {
+        return <div>找不到记录</div>;
+    }
 
-    if (dateList.length !== dateSet.size) {
-        setDateList(Array.from(dateSet).sort());
+    const [dateList, setDateList] = useState(newDateList);
+    const [currentDate, setCurrentDate] = useState(newDateList[newDateList.length - 1]);
+
+    if (dateList.length !== newDateList.length) {
+        setDateList(newDateList);
+        setCurrentDate(newDateList[newDateList.length - 1]);
+    }
+
+    if (dateSet.size < 1) {
+        return null;
     }
 
     const dateOptions = dateList.map(value => ({ value, title: value }));
@@ -47,9 +57,7 @@ const GroupPage: React.FunctionComponent<PageProps> = ({ recs, mems, gid }) => {
             <Table mems={mems} recs={recsMap[currentDate]} gid={gid}>
                 <Selector options={dateOptions} value={currentDate} setValue={setCurrentDate} />
             </Table>
-            <div style={{ height: 600, width: '99%' }}>
-                <ProcessChart mems={mems} recs={recsMap[currentDate]} />
-            </div>
+            <ProcessChart mems={mems} recs={recsMap[currentDate]} />
         </>
     );
 };
