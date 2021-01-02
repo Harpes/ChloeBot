@@ -27,7 +27,7 @@ async def _():
     if resp.status_code != 200:
         return
 
-    events = json.loads(resp.text, encoding='utf8')
+    events = json.loads(resp.text)
     event_messages = []
     time_formatter = '%Y/%m/%d %H:%M'
     now = datetime.datetime.now()

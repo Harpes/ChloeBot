@@ -138,7 +138,7 @@ async def fetch_arena(defender: list, region: int):
 
     res = {}
     try:
-        res = json.loads(response.text, encoding='utf8')
+        res = json.loads(response.text)
     except BaseException as e:
         print(e)
         res = response
