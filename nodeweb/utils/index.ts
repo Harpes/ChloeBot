@@ -16,7 +16,6 @@ export type Recs = {
 };
 
 export type Mems = {
-    name: string;
     [index: string]: string;
 };
 

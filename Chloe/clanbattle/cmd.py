@@ -2,6 +2,7 @@ import math
 import re
 from datetime import datetime, timedelta
 from random import choices
+from PIL.ImageFont import truetype
 
 import nonebot
 from nonebot import CommandSession, MessageSegment, on_command, permission
@@ -11,7 +12,7 @@ from .battleMaster import BattleMaster
 
 __plugin_name__ = 'clanbattle'
 
-# server_http_adress = 'http://localhost:80'
+# server_http_adress = 'http://localhost'
 server_http_adress = 'https://harpes.michikawachin.art'
 
 
@@ -20,6 +21,28 @@ battleObj = BattleMaster()
 
 boss_names = ['树上', '一王', '二王', '三王', '四王', '五王']
 reg_nums = r'([0-9]+(\.?[0-9]+)?)([Ww万Kk千])?'
+
+
+CLANBATTLE_PROCESSING = False
+
+
+def set_clanbattle_procession(value: bool):
+    global CLANBATTLE_PROCESSING
+    CLANBATTLE_PROCESSING = value
+
+
+@on_command('开始会战', permission=permission.SUPERUSER)
+async def _(session: CommandSession):
+    set_clanbattle_procession(True)
+
+    await session.finish(f'会战状态已更新{CLANBATTLE_PROCESSING}')
+
+
+@on_command('结束会战', permission=permission.SUPERUSER)
+async def _(session: CommandSession):
+    set_clanbattle_procession(False)
+
+    await session.finish(f'会战状态已更新{CLANBATTLE_PROCESSING}')
 
 
 def format_num(value) -> str:
@@ -276,6 +299,10 @@ def add_rec(gid: int, uid: int, r: int, boss: int, dmg: int, flag: int = 0, rema
 
 
 async def update_rec(gid: int, uid: int, dmg: int, remark: dict = {}):
+    if not CLANBATTLE_PROCESSING:
+        await bot.send_group_msg(group_id=gid, message='会战已结束，暂时停止计入出刀伤害。')
+        return
+
     rec_type = 0
     over_kill = -1
 

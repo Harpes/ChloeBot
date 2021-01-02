@@ -11,7 +11,7 @@ import { getBossDisplayName, Mems, Recs } from '../utils';
 
 interface Props {
     recs: Array<Recs>;
-    mems: Omit<Mems, 'name'>;
+    mems: Mems;
 }
 
 const renderItem: EChartOption.SeriesCustom.RenderItem = (params, api) => {
