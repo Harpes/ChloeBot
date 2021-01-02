@@ -10,7 +10,7 @@ import { color, Mems, Recs, shortNumbers } from '../utils';
 
 interface Props {
     recs: Array<Recs>;
-    mems: Omit<Mems, 'name'>;
+    mems: Mems;
 }
 
 const names = ['一王', '二王', '三王', '四王', '五王'];

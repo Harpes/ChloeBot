@@ -6,7 +6,7 @@ import { cellStyle, headerStyle } from './Table';
 
 interface Props {
     recs: Array<Recs>;
-    mems: Omit<Mems, 'name'>;
+    mems: Mems;
     gid: string;
     children: JSX.Element;
 }

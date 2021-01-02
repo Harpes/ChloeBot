@@ -16,11 +16,10 @@ type RouteParams = {
 interface PageProps extends RouteParams {
     recs: Array<Recs>;
     mems: Mems;
+    name: string;
 }
 
-const GroupPage: React.FunctionComponent<PageProps> = ({ recs, mems, gid }) => {
-    const groupName = mems.name || '';
-    delete (mems as any).name;
+const GroupPage: React.FunctionComponent<PageProps> = ({ recs, mems, gid, name: groupName }) => {
     const recsMap: { [index: string]: PageProps['recs'] } = {};
 
     const dateSet: Set<string> = new Set<string>();
@@ -105,9 +104,12 @@ export const getServerSideProps: GetServerSideProps<PageProps, RouteParams> = as
         const recs = await (await fetch('http://127.0.0.1:8080/recs?g=' + gid)).json();
         const mems = await (await fetch('http://127.0.0.1:8080/mems?g=' + gid)).json();
 
+        const name = mems.name || '';
+        delete mems.name;
+
         if (recs && mems) {
             return {
-                props: { mems, recs, gid },
+                props: { mems, recs, gid, name },
             };
         }
     }
@@ -117,6 +119,7 @@ export const getServerSideProps: GetServerSideProps<PageProps, RouteParams> = as
             recs: [],
             mems: { name: '' },
             gid: '',
+            name: '',
         },
     };
 };
