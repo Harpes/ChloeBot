@@ -12,7 +12,7 @@ from .battleMaster import BattleMaster
 __plugin_name__ = 'clanbattle'
 
 # server_http_adress = 'http://localhost:80'
-server_http_adress = 'https://harpes.michikawachin.art/'
+server_http_adress = 'https://harpes.michikawachin.art'
 
 
 bot = nonebot.get_bot()
@@ -206,30 +206,30 @@ async def show_kill_rec(session: CommandSession):
     await session.finish(msg)
 
 
-@on_command('昨日报告', permission=permission.GROUP, only_to_me=False)
-async def show_report_yesterday(session: CommandSession):
-    gid = session.ctx['group_id']
+# @on_command('昨日报告', permission=permission.GROUP, only_to_me=False)
+# async def show_report_yesterday(session: CommandSession):
+#     gid = session.ctx['group_id']
 
-    clan, _ = battleObj.get_clan(gid)
-    if clan is None:
-        return
+#     clan, _ = battleObj.get_clan(gid)
+#     if clan is None:
+#         return
 
-    yesterday = get_start_of_day(datetime.now() - timedelta(days=1))
-    recs = battleObj.get_rec(
-        gid, uid=None, start=yesterday, end=get_start_of_day())
-    if len(recs) == 0:
-        await session.finish('昨日无出刀记录。')
-        return
+#     yesterday = get_start_of_day(datetime.now() - timedelta(days=1))
+#     recs = battleObj.get_rec(
+#         gid, uid=None, start=yesterday, end=get_start_of_day())
+#     if len(recs) == 0:
+#         await session.finish('昨日无出刀记录。')
+#         return
 
-    rec = recs[0]
-    begin_round, begin_boss = rec['round'], rec['boss']
-    rec = recs[len(recs) - 1]
-    end_round, end_boss = rec['round'], rec['boss']
-    msg = f'昨日进度{begin_round}周目{boss_names[begin_boss]}~{end_round}周目{boss_names[end_boss]}。'
-    msg += '\n详情：' + server_http_adress + '/' + \
-        encode(gid) + '?' + yesterday.strftime('%Y%m%d')
+#     rec = recs[0]
+#     begin_round, begin_boss = rec['round'], rec['boss']
+#     rec = recs[len(recs) - 1]
+#     end_round, end_boss = rec['round'], rec['boss']
+#     msg = f'昨日进度{begin_round}周目{boss_names[begin_boss]}~{end_round}周目{boss_names[end_boss]}。'
+#     msg += '\n详情：' + server_http_adress + '/' + \
+#         encode(gid) + '?' + yesterday.strftime('%Y%m%d')
 
-    await session.finish(msg)
+#     await session.finish(msg)
 
 
 @on_command('报告', aliases=('出刀统计', '今日报告', 'bg', 'BG'), permission=permission.GROUP, only_to_me=False)
@@ -242,7 +242,7 @@ async def show_report(session: CommandSession):
 
     recs = battleObj.get_rec(gid, uid=None, start=get_start_of_day())
     if len(recs) == 0:
-        await session.finish('今日尚无出刀记录。')
+        await session.finish(f'今日尚无出刀记录。\n详情：{server_http_adress}/{encode(gid)}')
         return
 
     # 整刀数 尾刀数
