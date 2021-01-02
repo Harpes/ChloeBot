@@ -41,7 +41,7 @@ async def Tevents(session: CommandSession):
     resp = requests.get(url)
     if resp.status_code != 200:
         await session.finish(f'查询失败 {resp.status_code}')
-    data = json.loads(resp.text, encoding='utf8')
+    data = json.loads(resp.text)
 
     n = datetime.datetime.now()
     msg0 = '已查询到以下活动：'
@@ -65,7 +65,7 @@ async def anime_search(session: CommandSession):
         url = f'https://trace.moe/api/search?url={img[0]}'
         r = requests.get(url)
         if r.status_code == 200:
-            data = json.loads(r.text, encoding='utf8')
+            data = json.loads(r.text)
             d = {}
             for i in range(len(data['docs'])):
                 if data['docs'][i]['title_chinese'] in d.keys():

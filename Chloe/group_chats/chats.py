@@ -14,7 +14,7 @@ async def _(context):
     if len(message) > 20:
         return
 
-    if random.randint(0, 100) < 3:
+    if random.randint(0, 100) < 4:
         await bot.send_group_msg(group_id=group_id, message=message)
 
 
@@ -59,8 +59,8 @@ async def _(session: CommandSession):
 
 @on_command('rank', only_to_me=False)
 async def _(session: CommandSession):
-    #path = os.path.join(os.path.dirname(__file__), "Rank.png")
-    #await session.send(f'煌灵R17-4[CQ:image,file=file:///{path}]')
+    # path = os.path.join(os.path.dirname(__file__), "Rank.png")
+    # await session.send(f'煌灵R17-4[CQ:image,file=file:///{path}]')
 
     path1 = os.path.join(os.path.dirname(__file__), "Rank1.jpg")
     path2 = os.path.join(os.path.dirname(__file__), "Rank2.jpg")

@@ -100,7 +100,7 @@ async def update_chara():
 
                 for name in fetch_names:
                     t_name = normname(name)
-                    if t_name not in old_names and len(t_name) > 0:
+                    if t_name not in old_names and t_name not in NAME2ID and len(t_name) > 0:
                         delta_names.append(t_name)
 
                 new_chara[chara_id] = old_names + delta_names
