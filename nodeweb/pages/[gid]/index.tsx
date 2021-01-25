@@ -2,11 +2,11 @@ import { GetServerSideProps } from 'next';
 import React, { useCallback, useState } from 'react';
 
 import AppBar from '../../components/AppBar';
-import TotalChart from '../../components/TotalChart';
 import ProcessChart from '../../components/ProcessChart';
 import Selector from '../../components/Selector';
 import Table from '../../components/Table';
 import TableTotal from '../../components/TableTotal';
+import TotalChart from '../../components/TotalChart';
 import { getDayOfDateString, Mems, Recs } from '../../utils';
 
 type RouteParams = {

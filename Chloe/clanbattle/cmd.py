@@ -1,8 +1,7 @@
 import math
 import re
-from datetime import datetime, timedelta
+from datetime import datetime
 from random import choices
-from PIL.ImageFont import truetype
 
 import nonebot
 from nonebot import CommandSession, MessageSegment, on_command, permission

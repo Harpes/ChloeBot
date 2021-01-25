@@ -1,36 +1,31 @@
+![Image Text](https://github.com/Harpes/ChloeBot/blob/master/nodeweb/public/chloe.gif?raw=true)
+
 # ChloeBot
 
 A QQBot based on Nonebot for PCR clanbattle
-
-**2020 年 8 月 2 日 0 点，QQ 机器人框架相继停止维护。**
-**感谢 酷 Q 项目 和 CQHTTP 插件 的开发者们！感谢他们让 ChloeBot 得以诞生！**
-**ChloeBot 不再对酷 Q 进行支持**
 
 基于 [NoneBot](https://nonebot.cqp.moe/)框架的 pcr 公会战特化的 QQ 机器人
 
 ## 部署指南 - QuickStart
 
-**由于酷 Q 已停止维护，本指南已部分失效。您可以使用[CQHTTP Mirai](https://github.com/yyuueexxiinngg/cqhttp-mirai)或者[GO CQHTTP](https://github.com/Mrs4s/go-cqhttp)。由于当前 mirai 仍不稳定（甚至删库跑路），请自行参考相应的文档进行部署，**
-
 1. 安装下列软件
 
     - Python3 https://www.python.org/
-    - 酷 Q https://cqp.cc/b/news
-        > 初次部署建议在本地使用酷 Q Air 版进行尝试即可。
-    - CQHTTP 插件 https://github.com/richardchien/coolq-http-api/releases
-        > CQHTTP 插件的部署文档 https://cqhttp.cc/docs/
+    - NodeJs https://nodejs.org/ & yarn (`npm install -g yarn`)
+    - go-cqhttp https://github.com/Mrs4s/go-cqhttp
 
-2. 运行酷 Q 并启用 CQHTTP 插件，并修改 CQHTTP 插件的配置文件，下面的配置可供参考：
+2. 运行 go-cqhttp 并修改配置文件，下面的配置可供参考：
 
     ```json
-    {
-        "use_http": false,
-        "use_ws": false,
-        "use_ws_reverse": true,
-        "ws_reverse_use_universal_client": true,
-        "ws_reverse_url": "ws://127.0.0.1:8080/ws/",
-        "serve_data_files": false
-    }
+    ws_reverse_servers: [
+        {
+            "enabled": true,
+            "reverse_url": "ws://127.0.0.1:8080/ws/",
+            "reverse_api_url": "ws://127.0.0.1:8080/ws/api/",
+            "reverse_event_url": "ws://127.0.0.1:8080/ws/event/",
+            "reverse_reconnect_interval": 3000
+        }
+    ]
     ```
 
 3. 进入本项目的根目录，确认下列的 Python 依赖库已安装：
@@ -40,7 +35,7 @@ A QQBot based on Nonebot for PCR clanbattle
     - pillow
     - zhconv
 
-4. 最后，开启两个命令行窗口，运行 `main.py` 即可
+4. 最后，开启两个命令行窗口，其中一个运行 `main.py` ，另一个 `cd nodeweb && yarn && yarn start`
 
 ## 公会战指令
 
