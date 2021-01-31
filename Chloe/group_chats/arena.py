@@ -8,6 +8,7 @@ import requests
 from nonebot import CommandSession, on_command
 from PIL import Image, ImageDraw, ImageFont
 
+from .. import pic2msg
 from .chara import gen_chara_avatar, get_chara_id, get_chara_name, res_path
 
 bot = nonebot.get_bot()
@@ -17,9 +18,6 @@ bot = nonebot.get_bot()
 API_KEY = ''
 
 img_size = 60
-imgOut = os.path.join(os.path.dirname(__file__), 'out')
-if not os.path.exists(imgOut):
-    os.mkdir(imgOut)
 
 icon_size = 16
 font = ImageFont.truetype('Microsoft Sans Serif.ttf', icon_size)
@@ -45,9 +43,6 @@ async def _(session: CommandSession):
 
 
 async def search_arena(session: CommandSession, region: int = 3):
-    context = session.ctx
-    uid = context['user_id']
-
     argv = session.current_arg_text.strip()
     argv = re.sub(r'[?？，,_]', ' ', argv)
     argv = argv.split()
@@ -122,9 +117,7 @@ async def search_arena(session: CommandSession, region: int = 3):
         text_overlay.text(
             ((sx + icon_size + gad * 2, sy + icon_size + gad * 3)), str(entry['down']), (0, 0, 0), font=font)
 
-    pic_path = os.path.join(imgOut, f'{uid}.png')
-    pic.save(pic_path, quality=100)
-    msg += f'[CQ:image,file=file:///{pic_path}]'
+    msg += pic2msg(pic)
     msg += '\nSupport by pcrdfans_com'
     await session.finish(msg, at_sender=True)
 

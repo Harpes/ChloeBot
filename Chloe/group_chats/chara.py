@@ -3,14 +3,14 @@ import json
 import re
 import traceback
 from io import BytesIO
-from os import path, remove
+from os import path
 
 import requests
 import zhconv
 from nonebot import CommandSession, on_command, permission, scheduler
 from PIL import Image
 
-from .. import send_su_message
+from .. import pic2msg, send_su_message
 
 icon_url = 'https://redive.estertion.win/icon/unit/'
 res_path = 'res'
@@ -66,14 +66,11 @@ async def _(session: CommandSession):
 
     if len(new_icons) > 0:
         ile = 60
-        res_path = path.join(path.dirname(__file__), 'new.png')
         pic = Image.new("RGB", (ile * len(new_icons), ile), 'white')
         for i, p in enumerate(new_icons):
             pic.paste(p.resize((ile, ile)), (i * ile, 0))
 
-        pic.save(res_path)
-        await send_su_message(f'获取到新头像[CQ:image,file=file:///{res_path}]')
-        remove(res_path)
+        await send_su_message(f'获取到新头像{pic2msg(pic)}')
 
 
 # @scheduler.scheduled_job('interval', seconds=10)
