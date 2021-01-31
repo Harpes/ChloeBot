@@ -7,10 +7,8 @@ from nonebot import CommandSession, on_command, permission
 from PIL import Image
 
 from .chara import gen_chara_avatar, get_chara_id
+from .. import pic2msg
 
-imgOut = os.path.join(os.path.dirname(__file__), 'out')
-if not os.path.exists(imgOut):
-    os.mkdir(imgOut)
 
 gacya_path = os.path.join('config', 'gacya.json')
 
@@ -57,8 +55,7 @@ async def _(session: CommandSession):
     else:
         pic = gen_chara_avatar(rd.choice(gacya1), 1)
 
-    pic.save(os.path.join(imgOut, 's.png'))
-    await session.send(f'[CQ:image,file=file:///{os.path.join(imgOut, "s.png")}]', at_sender=True)
+    await session.send(pic2msg(pic), at_sender=True)
 
 
 @on_command('单抽到up', aliases=('單抽到up', ), only_to_me=False)
@@ -67,7 +64,6 @@ async def _(session: CommandSession):
 
     if pUp == 0:
         await session.finish('当前没有开放up角色')
-        return
 
     result = []
     n3, n2, n1 = [0, 0, 0]
@@ -90,24 +86,20 @@ async def _(session: CommandSession):
         else:
             n1 += 1
 
-    msg = f'花费{n3 + n2 + n1}抽，获得{n3 * stones[0] + n2 * stones[1] + n1 * stones[2]}个无名之石'
+    msg = f'花费{n3 + n2 + n1}抽，获得{n3 * stones[0] + n2 * stones[1] + n1 * stones[2]}个无名之石\n'
 
     row_nums = math.ceil(pow(n3, 0.5))
     width = row_nums * img_size
     height = math.ceil(n3 / row_nums) * img_size
     background = Image.new('RGB', (width, height), 'white')
-    name = session.ctx['user_id']
     for index, cha in enumerate(result):
         pic = gen_chara_avatar(cha, 3).resize((img_size, img_size))
         col = index % row_nums
         row = index // row_nums
         background.paste(pic, (col * img_size, row * img_size))
 
-    output_path = os.path.join(imgOut, f'{name}.png')
-    background.save(output_path, quality=100)
-    msg += f'\n[CQ:image,file=file:///{output_path}]'
+    msg += pic2msg(background)
     msg += f'\n共计{n3}个三星，{n2}个两星，{n1}个一星'
-
     await session.send(msg, at_sender=True)
 
 
@@ -140,10 +132,9 @@ async def _(session: CommandSession):
                 result.append([rd.choice(gacya1), 1])
                 n1 += 1
 
-    msg = f'获得{n3 * stones[0] + n2 * stones[1] + n1 * stones[2]}个无名之石'
+    msg = f'获得{n3 * stones[0] + n2 * stones[1] + n1 * stones[2]}个无名之石\n'
 
     background = Image.new('RGB', (img_size * 5, img_size * 2), 'white')
-    name = session.ctx['user_id']
     a = 0
     for x in range(5):
         for y in range(2):
@@ -151,10 +142,8 @@ async def _(session: CommandSession):
             pic = gen_chara_avatar(cha, star).resize((img_size, img_size))
             background.paste(pic, (x * img_size, y * img_size))
             a += 1
-    output_path = os.path.join(imgOut, f'{name}.png')
-    background.save(output_path, quality=100)
-    msg += f'[CQ:image,file=file:///{output_path}]'
 
+    msg += pic2msg(background)
     await session.send(msg, at_sender=True)
 
 
@@ -191,22 +180,19 @@ async def _(session: CommandSession):
                 else:
                     n1 += 1
 
-    msg = f'花费{n3 + n2 + n1}抽，获得{n3 * stones[0] + n2 * stones[1] + n1 * stones[2]}个无名之石'
+    msg = f'花费{n3 + n2 + n1}抽，获得{n3 * stones[0] + n2 * stones[1] + n1 * stones[2]}个无名之石\n'
 
     row_nums = math.ceil(pow(n3, 0.5))
     width = row_nums * img_size
     height = math.ceil(n3 / row_nums) * img_size
     background = Image.new('RGB', (width, height), 'white')
-    name = session.ctx['user_id']
     for index, cha in enumerate(result):
         pic = gen_chara_avatar(cha, 3).resize((img_size, img_size))
         col = index % row_nums
         row = index // row_nums
         background.paste(pic, (col * img_size, row * img_size))
 
-    output_path = os.path.join(imgOut, f'{name}.png')
-    background.save(output_path, quality=100)
-    msg += f'\n[CQ:image,file=file:///{output_path}]'
+    msg += pic2msg(background)
     msg += f'\n共计{n3}个三星，{n2}个两星，{n1}个一星'
 
     await session.send(msg, at_sender=True)
@@ -239,22 +225,19 @@ async def _(session: CommandSession):
                 else:
                     n1 += 1
 
-    msg = f'花费{n3 + n2 + n1}抽，获得{n3 * stones[0] + n2 * stones[1] + n1 * stones[2]}个无名之石'
+    msg = f'花费{n3 + n2 + n1}抽，获得{n3 * stones[0] + n2 * stones[1] + n1 * stones[2]}个无名之石\n'
 
     row_nums = math.ceil(pow(n3, 0.5))
     width = row_nums * img_size
     height = math.ceil(n3 / row_nums) * img_size
     background = Image.new('RGB', (width, height), 'white')
-    name = session.ctx['user_id']
     for index, cha in enumerate(result):
         pic = gen_chara_avatar(cha, 3).resize((img_size, img_size))
         col = index % row_nums
         row = index // row_nums
         background.paste(pic, (col * img_size, row * img_size))
 
-    output_path = os.path.join(imgOut, f'{name}.png')
-    background.save(output_path, quality=100)
-    msg += f'\n[CQ:image,file=file:///{output_path}]'
+    msg += pic2msg(background)
     msg += f'\n共计{n3}个三星，{n2}个两星，{n1}个一星'
 
     await session.send(msg, at_sender=True)
@@ -274,8 +257,8 @@ async def _(session: CommandSession):
     for index, cha in enumerate(char_ids):
         pic = gen_chara_avatar(cha, 3).resize((img_size, img_size))
         background.paste(pic, (index * img_size, 0))
-    background.save(os.path.join(imgOut, 's.png'))
-    await session.finish('Up角色已修改为\n' + f'[CQ:image,file=file:///{os.path.join(imgOut, "s.png")}]')
+
+    await session.finish('Up角色已修改为\n' + pic2msg(background))
 
 
 @on_command('修改概率', permission=permission.SUPERUSER, shell_like=True, only_to_me=False)
