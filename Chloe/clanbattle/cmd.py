@@ -45,7 +45,13 @@ async def _(session: CommandSession):
 
 
 def format_num(value) -> str:
-    return '{:,}'.format(value)
+    value = int(value)
+    if value > 100000000:
+        return f'{round(value / 100000000, 3)}E'
+    elif value > 10000:
+        return f'{int(value / 10000)}W'
+    else:
+        return f'{value}'
 
 
 async def get_member_name(gid: int, uid: int) -> str:
@@ -180,7 +186,7 @@ async def get_progress_message(gid: int) -> str:
         return '当前群没有创建公会'
 
     msg = '当前%d周目%s，剩余血量%s' % (r,
-                               boss_names[boss], '{:,}'.format(hp))
+                               boss_names[boss], format_num(hp))
 
     nums, enters = await see_enter(gid)
     if nums > 0:
@@ -458,7 +464,7 @@ async def undo_rec(session: CommandSession):
     u_name = await get_member_name(gid, last_uid)
 
     msg = '已撤销%s对%s周目%s的%s伤害' % (
-        u_name, r, boss_names[boss], '{:,}'.format(dmg))
+        u_name, r, boss_names[boss], format_num(dmg))
     battleObj.delete_rec(gid, recid)
 
     await session.send(msg)
