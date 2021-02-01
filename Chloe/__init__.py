@@ -4,6 +4,7 @@ from os import path
 
 import nonebot
 from nonebot import MessageSegment
+from nonebot.command import CommandSession
 from PIL import Image, ImageDraw, ImageFont
 
 MODULES_ON = {
@@ -74,3 +75,19 @@ def pic2b64(pic: Image.Image) -> str:
 
 def pic2msg(pic: Image.Image) -> str:
     return MessageSegment.image(pic2b64(pic))
+
+
+def get_username(session: CommandSession) -> str:
+    sender = session.ctx['sender']
+    card = sender.get('card', '')
+    if len(card) > 0:
+        return card
+    return sender['nickname']
+
+
+def get_msg_header(session: CommandSession) -> str:
+    message_type = session.ctx['message_type']
+    if message_type == 'private':
+        return ''
+
+    return f'>{get_username(session)}\n'

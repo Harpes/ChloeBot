@@ -8,7 +8,7 @@ import requests
 from nonebot import CommandSession, on_command
 from PIL import Image, ImageDraw, ImageFont
 
-from .. import pic2msg
+from .. import get_msg_header, pic2msg
 from .chara import gen_chara_avatar, get_chara_id, get_chara_name, res_path
 
 bot = nonebot.get_bot()
@@ -48,19 +48,19 @@ async def search_arena(session: CommandSession, region: int = 3):
     argv = argv.split()
 
     if len(argv) < 1:
-        await session.finish('请输入防守方角色，用空格隔开', at_sender=True)
+        await session.finish('请输入防守方角色，用空格隔开')
     elif len(argv) < 5:
-        await session.finish('当前不支持少于5人的查询，请挪步网页版进行查询', at_sender=True)
+        await session.finish('当前不支持少于5人的查询，请挪步网页版进行查询')
     elif len(argv) > 5:
-        await session.finish('编队不能多于5名角色', at_sender=True)
+        await session.finish('编队不能多于5名角色', )
 
     defender = [get_chara_id(name) for name in argv]
     for i, id_ in enumerate(defender):
         if id_ == 1000:
-            await session.finish(f'编队中含未知角色"{argv[i]}"，请尝试使用官方译名', at_sender=True)
+            await session.finish(f'编队中含未知角色"{argv[i]}"，请尝试使用官方译名')
 
     if len(defender) != len(set(defender)):
-        await session.finish('编队中出现重复角色', at_sender=True)
+        await session.finish('编队中出现重复角色')
 
     res = await fetch_arena(defender, region)
 
@@ -87,7 +87,7 @@ async def search_arena(session: CommandSession, region: int = 3):
         await session.finish('服务器返回错误0，请稍后重试')
 
     if len(res['data']['result']) < 1:
-        await session.finish('没有找到解法，请随意解决', at_sender=True)
+        await session.finish('没有找到解法，请随意解决')
 
     resolutions = res['data']['result'][:7]
     nums = len(resolutions)
@@ -119,7 +119,7 @@ async def search_arena(session: CommandSession, region: int = 3):
 
     msg += pic2msg(pic)
     msg += '\nSupport by pcrdfans_com'
-    await session.finish(msg, at_sender=True)
+    await session.finish(get_msg_header(session) + msg)
 
 
 async def fetch_arena(defender: list, region: int):

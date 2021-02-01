@@ -6,6 +6,7 @@ from random import choices
 import nonebot
 from nonebot import CommandSession, MessageSegment, on_command, permission
 
+from .. import get_msg_header
 from . import encode, get_start_of_day
 from .battleMaster import BattleMaster
 
@@ -22,7 +23,7 @@ boss_names = ['树上', '一王', '二王', '三王', '四王', '五王']
 reg_nums = r'([0-9]+(\.?[0-9]+)?)([Ww万Kk千])?'
 
 
-CLANBATTLE_PROCESSING = False
+CLANBATTLE_PROCESSING = True
 
 
 def set_clanbattle_procession(value: bool):
@@ -161,14 +162,16 @@ async def _(session: CommandSession):
                 time_return = 90.0
             calc_type = 1
 
+    header = get_msg_header(session)
     if calc_type == 0:
         # 根据剩余血量，过量伤害，余时，计算补偿刀时间
         if dmg < hp:
-            await session.finish(f'伤害{format_num(dmg)}小于Boss血量{format_num(hp)}。', at_sender=True)
+            await session.finish(header + f'伤害{format_num(dmg)}小于Boss血量{format_num(hp)}。')
+
         time_return = bc_calc_time_return(hp, dmg, time_remian)
         msg = f'实际血量{format_num(hp)}，预计伤害{format_num(dmg)}，剩余时间{time_remian}秒。'
         msg += '\n补偿刀返还时间{:.1f}秒。'.format(time_return)
-        await session.finish(msg, at_sender=True)
+        await session.finish(header + msg)
 
     elif calc_type == 1:
         # 根据伤害，余时，补偿刀时间，倒推需要的boss实际血量
@@ -176,7 +179,7 @@ async def _(session: CommandSession):
         delta = hp - result
         msg = f'预计伤害{format_num(dmg)}，余时{time_remian}秒，补偿刀{time_return}秒'
         msg += f'\n需要Boss血量在{format_num(result)}以下。\n当前Boss{format_num(hp)}血，还需要削{format_num(delta)}血。'
-        await session.finish(msg, at_sender=True)
+        await session.finish(header + msg)
 
 
 async def get_progress_message(gid: int) -> str:
@@ -185,8 +188,7 @@ async def get_progress_message(gid: int) -> str:
     if clan is None:
         return '当前群没有创建公会'
 
-    msg = '当前%d周目%s，剩余血量%s' % (r,
-                               boss_names[boss], format_num(hp))
+    msg = '%d周目%s，血量%s' % (r, boss_names[boss], format_num(hp))
 
     nums, enters = await see_enter(gid)
     if nums > 0:
@@ -232,32 +234,6 @@ async def show_kill_rec(session: CommandSession):
         msg += '\n' + boss_names[i] + '：' + '、'.join(m)
 
     await session.finish(msg)
-
-
-# @on_command('昨日报告', permission=permission.GROUP, only_to_me=False)
-# async def show_report_yesterday(session: CommandSession):
-#     gid = session.ctx['group_id']
-
-#     clan, _ = battleObj.get_clan(gid)
-#     if clan is None:
-#         return
-
-#     yesterday = get_start_of_day(datetime.now() - timedelta(days=1))
-#     recs = battleObj.get_rec(
-#         gid, uid=None, start=yesterday, end=get_start_of_day())
-#     if len(recs) == 0:
-#         await session.finish('昨日无出刀记录。')
-#         return
-
-#     rec = recs[0]
-#     begin_round, begin_boss = rec['round'], rec['boss']
-#     rec = recs[len(recs) - 1]
-#     end_round, end_boss = rec['round'], rec['boss']
-#     msg = f'昨日进度{begin_round}周目{boss_names[begin_boss]}~{end_round}周目{boss_names[end_boss]}。'
-#     msg += '\n详情：' + server_http_adress + '/' + \
-#         encode(gid) + '?' + yesterday.strftime('%Y%m%d')
-
-#     await session.finish(msg)
 
 
 @on_command('报告', aliases=('出刀统计', '今日报告', 'bg', 'BG'), permission=permission.GROUP, only_to_me=False)
@@ -541,7 +517,7 @@ async def _(session: CommandSession):
         return
 
     add_enter(gid, uid)
-    await session.finish('已为你记录出刀状态。', at_sender=True)
+    await session.finish('已为你记录出刀状态')
 
 
 @on_command('取消出刀', aliases=('撤销出刀', ), permission=permission.GROUP, only_to_me=False)
@@ -555,7 +531,7 @@ async def _(session: CommandSession):
         return
 
     del_enter(gid, uid)
-    await session.finish('已为你取消出刀状态。', at_sender=True)
+    await session.finish('已为你取消出刀状态')
 
 
 @on_command('zt', aliases=('ZT', ), permission=permission.GROUP, shell_like=True, only_to_me=False)
@@ -575,7 +551,7 @@ async def _(session: CommandSession):
         return
 
     add_enter(gid, uid, ' '.join(argv))
-    await session.finish('已为你记录出刀状态。', at_sender=True)
+    await session.finish('已为你记录出刀状态')
 
 
 @on_command('挂树', aliases=('上树', '掛樹', '上樹'), permission=permission.GROUP, only_to_me=False)
@@ -589,7 +565,7 @@ async def up_tree(session: CommandSession):
         return
 
     add_enter(gid, uid, '挂树')
-    await session.finish('成功上树。', at_sender=True)
+    await session.finish('成功上树')
 
 
 def add_reserve(gid: int, uid: int, boss: int) -> str:

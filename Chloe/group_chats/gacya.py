@@ -6,9 +6,8 @@ import random as rd
 from nonebot import CommandSession, on_command, permission
 from PIL import Image
 
+from .. import get_msg_header, pic2msg
 from .chara import gen_chara_avatar, get_chara_id
-from .. import pic2msg
-
 
 gacya_path = os.path.join('config', 'gacya.json')
 
@@ -55,7 +54,7 @@ async def _(session: CommandSession):
     else:
         pic = gen_chara_avatar(rd.choice(gacya1), 1)
 
-    await session.send(pic2msg(pic), at_sender=True)
+    await session.send(get_msg_header(session) + pic2msg(pic))
 
 
 @on_command('单抽到up', aliases=('單抽到up', ), only_to_me=False)
@@ -86,7 +85,8 @@ async def _(session: CommandSession):
         else:
             n1 += 1
 
-    msg = f'花费{n3 + n2 + n1}抽，获得{n3 * stones[0] + n2 * stones[1] + n1 * stones[2]}个无名之石\n'
+    msg = get_msg_header(
+        session) + f'花费{n3 + n2 + n1}抽，获得{n3 * stones[0] + n2 * stones[1] + n1 * stones[2]}个无名之石\n'
 
     row_nums = math.ceil(pow(n3, 0.5))
     width = row_nums * img_size
@@ -100,7 +100,7 @@ async def _(session: CommandSession):
 
     msg += pic2msg(background)
     msg += f'\n共计{n3}个三星，{n2}个两星，{n1}个一星'
-    await session.send(msg, at_sender=True)
+    await session.send(msg)
 
 
 @on_command('十连抽', aliases=('十連抽', ), only_to_me=False)
@@ -132,7 +132,8 @@ async def _(session: CommandSession):
                 result.append([rd.choice(gacya1), 1])
                 n1 += 1
 
-    msg = f'获得{n3 * stones[0] + n2 * stones[1] + n1 * stones[2]}个无名之石\n'
+    msg = get_msg_header(
+        session) + f'获得{n3 * stones[0] + n2 * stones[1] + n1 * stones[2]}个无名之石\n'
 
     background = Image.new('RGB', (img_size * 5, img_size * 2), 'white')
     a = 0
@@ -144,7 +145,7 @@ async def _(session: CommandSession):
             a += 1
 
     msg += pic2msg(background)
-    await session.send(msg, at_sender=True)
+    await session.send(msg)
 
 
 @on_command('抽到up', only_to_me=False)
@@ -180,7 +181,8 @@ async def _(session: CommandSession):
                 else:
                     n1 += 1
 
-    msg = f'花费{n3 + n2 + n1}抽，获得{n3 * stones[0] + n2 * stones[1] + n1 * stones[2]}个无名之石\n'
+    msg = get_msg_header(
+        session) + f'花费{n3 + n2 + n1}抽，获得{n3 * stones[0] + n2 * stones[1] + n1 * stones[2]}个无名之石\n'
 
     row_nums = math.ceil(pow(n3, 0.5))
     width = row_nums * img_size
@@ -195,7 +197,7 @@ async def _(session: CommandSession):
     msg += pic2msg(background)
     msg += f'\n共计{n3}个三星，{n2}个两星，{n1}个一星'
 
-    await session.send(msg, at_sender=True)
+    await session.send(msg)
 
 
 @on_command('抽一井', only_to_me=False)
@@ -225,7 +227,8 @@ async def _(session: CommandSession):
                 else:
                     n1 += 1
 
-    msg = f'花费{n3 + n2 + n1}抽，获得{n3 * stones[0] + n2 * stones[1] + n1 * stones[2]}个无名之石\n'
+    msg = get_msg_header(
+        session) + f'花费{n3 + n2 + n1}抽，获得{n3 * stones[0] + n2 * stones[1] + n1 * stones[2]}个无名之石\n'
 
     row_nums = math.ceil(pow(n3, 0.5))
     width = row_nums * img_size
@@ -240,7 +243,7 @@ async def _(session: CommandSession):
     msg += pic2msg(background)
     msg += f'\n共计{n3}个三星，{n2}个两星，{n1}个一星'
 
-    await session.send(msg, at_sender=True)
+    await session.send(msg)
 
 
 @on_command('修改up', permission=permission.SUPERUSER, shell_like=True, only_to_me=False)
