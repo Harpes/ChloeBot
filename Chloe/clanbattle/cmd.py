@@ -166,19 +166,19 @@ async def _(session: CommandSession):
     if calc_type == 0:
         # 根据剩余血量，过量伤害，余时，计算补偿刀时间
         if dmg < hp:
-            await session.finish(header + f'伤害{format_num(dmg)}小于Boss血量{format_num(hp)}。')
+            await session.finish(header + f'伤害{format_num(dmg)}小于血量{format_num(hp)}。')
 
         time_return = bc_calc_time_return(hp, dmg, time_remian)
-        msg = f'实际血量{format_num(hp)}，预计伤害{format_num(dmg)}，剩余时间{time_remian}秒。'
-        msg += '\n补偿刀返还时间{:.1f}秒。'.format(time_return)
+        msg = f'血量{format_num(hp)}，伤害{format_num(dmg)}，剩余时间{time_remian}秒。'
+        msg += '\n返还时间{:.1f}秒。'.format(time_return)
         await session.finish(header + msg)
 
     elif calc_type == 1:
         # 根据伤害，余时，补偿刀时间，倒推需要的boss实际血量
         result = bc_calc_hp(dmg, time_remian, time_return)
         delta = hp - result
-        msg = f'预计伤害{format_num(dmg)}，余时{time_remian}秒，补偿刀{time_return}秒'
-        msg += f'\n需要Boss血量在{format_num(result)}以下。\n当前Boss{format_num(hp)}血，还需要削{format_num(delta)}血。'
+        msg = f'伤害{format_num(dmg)}，余时{time_remian}秒，返还{time_return}秒'
+        msg += f'\n需要血量在{format_num(result)}以下，当前血量{format_num(hp)}，差值{format_num(delta)}'
         await session.finish(header + msg)
 
 
