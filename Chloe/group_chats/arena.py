@@ -92,8 +92,8 @@ async def search_arena(session: CommandSession, region: int = 3):
     resolutions = res['data']['result'][:7]
     nums = len(resolutions)
 
-    msg = '已找到以下解法：\n防守[' + \
-        ' '.join([get_chara_name(i) for i in defender]) + ']\n'
+    msg = get_msg_header(session) + '已找到以下解法：\n防守['
+    msg += ' '.join([get_chara_name(i) for i in defender]) + ']\n'
 
     pic = Image.new('RGBA', (int(img_size * 6.4), img_size * nums), 'white')
     text_overlay = ImageDraw.Draw(pic)
@@ -119,7 +119,7 @@ async def search_arena(session: CommandSession, region: int = 3):
 
     msg += pic2msg(pic)
     msg += '\nSupport by pcrdfans_com'
-    await session.finish(get_msg_header(session) + msg)
+    await session.finish(msg)
 
 
 async def fetch_arena(defender: list, region: int):

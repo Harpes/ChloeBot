@@ -34,7 +34,7 @@ def edit_gacya_config(key: str, value):
 
 
 stones = [50, 10, 1]
-img_size = 60
+img_size = 100
 
 
 @on_command('单抽', aliases=('單抽', ), only_to_me=False)

@@ -3,7 +3,6 @@ from io import BytesIO
 from os import path
 
 import nonebot
-from nonebot import MessageSegment
 from nonebot.command import CommandSession
 from PIL import Image, ImageDraw, ImageFont
 
@@ -74,7 +73,9 @@ def pic2b64(pic: Image.Image) -> str:
 
 
 def pic2msg(pic: Image.Image) -> str:
-    return MessageSegment.image(pic2b64(pic))
+    # TODO: find out why MessageSegment.image doesn't work
+    # return MessageSegment.image(pic2b64(pic))
+    return f'[CQ:image,file={pic2b64(pic)}]'
 
 
 def get_username(session: CommandSession) -> str:
