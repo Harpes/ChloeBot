@@ -14,17 +14,17 @@ async def _(context):
     user_id = context['user_id']
 
     if '抽' in message and '奖' in message:
-        # ban_time = randint(120, 480)
-        ban_time = 153
+        ban_time = randint(120, 480)
         for _ in range(message.count('大')):
             ban_time += randint(7200, 14400)
         for _ in range(message.count('中')):
             ban_time += randint(900, 1800)
         for _ in range(message.count('小')):
-            ban_time += randint(100, 200)
+            ban_time += randint(450, 900)
 
         if ban_time > 1:
-            await bot.set_group_ban(group_id=group_id, user_id=user_id, duration=ban_time)
+            max_time = 30 * 24 * 60 * 60 - 1
+            await bot.set_group_ban(group_id=group_id, user_id=user_id, duration=min(ban_time, max_time))
 
 
 @on_command('精致睡眠', permission=permission.GROUP, only_to_me=False)
