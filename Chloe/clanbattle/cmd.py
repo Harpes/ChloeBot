@@ -6,7 +6,7 @@ from random import choices
 import nonebot
 from nonebot import CommandSession, MessageSegment, on_command, permission
 
-from .. import get_msg_header
+from .. import get_msg_header, session_send_message
 from . import encode, get_start_of_day
 from .battleMaster import BattleMaster
 
@@ -23,30 +23,9 @@ boss_names = ['树上', '一王', '二王', '三王', '四王', '五王']
 reg_nums = r'([0-9]+(\.?[0-9]+)?)([Ww万Kk千])?'
 
 
-CLANBATTLE_PROCESSING = True
-
-
-def set_clanbattle_procession(value: bool):
-    global CLANBATTLE_PROCESSING
-    CLANBATTLE_PROCESSING = value
-
-
-@on_command('开始会战', permission=permission.SUPERUSER)
-async def _(session: CommandSession):
-    set_clanbattle_procession(True)
-
-    await session.finish(f'会战状态已更新{CLANBATTLE_PROCESSING}')
-
-
-@on_command('结束会战', permission=permission.SUPERUSER)
-async def _(session: CommandSession):
-    set_clanbattle_procession(False)
-
-    await session.finish(f'会战状态已更新{CLANBATTLE_PROCESSING}')
-
-
 def format_num(value) -> str:
     value = int(value)
+    # return '{:,}'.format(value)
     if value > 100000000:
         return f'{round(value / 100000000, 3)}E'
     elif value > 10000:
@@ -166,12 +145,15 @@ async def _(session: CommandSession):
     if calc_type == 0:
         # 根据剩余血量，过量伤害，余时，计算补偿刀时间
         if dmg < hp:
-            await session.finish(header + f'伤害{format_num(dmg)}小于血量{format_num(hp)}。')
+            # await session.finish(header + f'伤害{format_num(dmg)}小于血量{format_num(hp)}。')
+            await session_send_message(session, header + f'伤害{format_num(dmg)}小于血量{format_num(hp)}', 'bc血量不足')
+            return
 
         time_return = bc_calc_time_return(hp, dmg, time_remian)
         msg = f'血量{format_num(hp)}，伤害{format_num(dmg)}，剩余时间{time_remian}秒。'
-        msg += '\n返还时间{:.1f}秒。'.format(time_return)
-        await session.finish(header + msg)
+        msg += '\n返还时间{:.1f}秒'.format(time_return)
+        # await session.finish(header + msg)
+        await session_send_message(session, header + msg, 'bc正算')
 
     elif calc_type == 1:
         # 根据伤害，余时，补偿刀时间，倒推需要的boss实际血量
@@ -179,7 +161,8 @@ async def _(session: CommandSession):
         delta = hp - result
         msg = f'伤害{format_num(dmg)}，余时{time_remian}秒，返还{time_return}秒'
         msg += f'\n需要血量在{format_num(result)}以下，当前血量{format_num(hp)}，差值{format_num(delta)}'
-        await session.finish(header + msg)
+        # await session.finish(header + msg)
+        await session_send_message(session, header + msg, 'bc反算')
 
 
 async def get_progress_message(gid: int) -> str:
@@ -201,7 +184,8 @@ async def get_progress_message(gid: int) -> str:
 async def _(session: CommandSession):
     gid = session.ctx['group_id']
     msg = await get_progress_message(gid)
-    await session.finish(msg)
+    # await session.finish(msg)
+    await session_send_message(session, msg, '状态')
 
 
 @on_command('查询尾刀', aliases=('尾刀统计', '尾刀查询', '查尾刀'), permission=permission.GROUP, only_to_me=False)
@@ -233,7 +217,8 @@ async def show_kill_rec(session: CommandSession):
 
         msg += '\n' + boss_names[i] + '：' + '、'.join(m)
 
-    await session.finish(msg)
+    # await session.finish(msg)
+    await session_send_message(session, msg, '查尾刀')
 
 
 @on_command('报告', aliases=('出刀统计', '今日报告', 'bg', 'BG'), permission=permission.GROUP, only_to_me=False)
@@ -280,10 +265,6 @@ def add_rec(gid: int, uid: int, r: int, boss: int, dmg: int, flag: int = 0, rema
 
 
 async def update_rec(gid: int, uid: int, dmg: int, remark: dict = {}):
-    if not CLANBATTLE_PROCESSING:
-        await bot.send_group_msg(group_id=gid, message='会战已结束，暂时停止计入出刀伤害。')
-        return
-
     rec_type = 0
     over_kill = -1
 
@@ -482,7 +463,7 @@ async def see_enter(gid: int) -> (int, str):
     def sort_by_minutes(elem):
         return elem[1]
 
-    msgs = []
+    trees, processing, remarks = [], [], []
     for e in enters:
         uid, time, remark = e['uid'], e['time'], e['remark']
         user_name = await get_member_name(gid, uid)
@@ -491,11 +472,26 @@ async def see_enter(gid: int) -> (int, str):
                        datetime.strptime(time, '%Y/%m/%d %H:%M')).total_seconds() / 60
         msg = f'{kill_mark}({int(time_passed)}分钟前){user_name}'
         if remark:
-            msg += '：' + remark
-        msgs.append((msg, time_passed))
+            if remark == '挂树':
+                trees.append((msg, time_passed))
+            else:
+                msg += '：' + remark
+                remarks.append((msg, time_passed))
+        else:
+            processing.append((msg, time_passed))
 
-    msgs.sort(key=sort_by_minutes)
-    return (len(msgs), '\n'.join([i[0] for i in msgs]))
+    message = ''
+    if len(trees) > 0:
+        trees.sort(key=sort_by_minutes)
+        message += '挂树：' + '、'.join([i[0] for i in trees]) + '\n'
+    if len(processing) > 0:
+        processing.sort(key=sort_by_minutes)
+        message += '挑战中：' + '、'.join([i[0] for i in processing]) + '\n'
+    if len(remarks) > 0:
+        remarks.sort(key=sort_by_minutes)
+        message += '\n'.join([i[0] for i in remarks]) + '\n'
+
+    return (len(enters), message[:-1])
 
 
 def del_enter(gid: int, uid: int):
@@ -709,4 +705,5 @@ async def get_reserve(session: CommandSession):
     gid = session.ctx['group_id']
     msg = await see_reserve(gid)
 
-    await session.finish(msg)
+    # await session.finish(msg)
+    await session_send_message(session, msg, '预约查询')

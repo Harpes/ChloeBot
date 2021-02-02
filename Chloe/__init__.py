@@ -92,3 +92,15 @@ def get_msg_header(session: CommandSession) -> str:
         return ''
 
     return f'>{get_username(session)}\n'
+
+
+async def session_send_message(session: CommandSession, message: str, commandName: str):
+    try:
+        await session.send(message, ignore_failure=False)
+    except Exception:
+        pic = text2pic(message)
+        try:
+            await session.send(pic2msg(pic))
+        except Exception:
+            gid = session.ctx['group_id']
+            await send_su_message(f'群{gid}发送消息失败：{commandName}\n{message}')
