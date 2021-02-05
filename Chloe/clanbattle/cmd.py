@@ -374,7 +374,11 @@ async def handle_rec_report(msg: str, gid: int, uid: int):
 
             break
 
-    if dmg > -2:
+    if 1000 < dmg < 0:
+        msg = '报刀伤害低于1000，已忽略'
+        await bot.send_group_msg(group_id=gid, message=msg)
+        return
+    elif dmg > -2:
         await update_rec(gid, uid, dmg, remark)
 
 
@@ -455,7 +459,7 @@ def add_enter(gid: int, uid: int, msg: str = ''):
     battleObj.add_enter(gid, uid, msg, flag)
 
 
-async def see_enter(gid: int) -> (int, str):
+async def see_enter(gid: int):
     enters = battleObj.get_enter(gid)
     if len(enters) < 1:
         return (0, '')
