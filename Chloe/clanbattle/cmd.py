@@ -67,7 +67,7 @@ async def add_clan(session: CommandSession, server: int):
         await session.finish('创建%s服公会[%s]成功' % (['日', '台', '国'][server], clan))
 
 
-@on_command('help', aliases=('帮助', '-help', '--help'), permission=permission.GROUP_OWNER, shell_like=True, only_to_me=False)
+@on_command('help', aliases=('帮助', '-help', '--help'), permission=permission.GROUP, only_to_me=False)
 async def _(session: CommandSession):
     await session.finish(f'会战指令详情:{server_http_adress}')
 
