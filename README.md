@@ -4,11 +4,11 @@
 
 A QQBot based on Nonebot for PCR clanbattle
 
-基于 [NoneBot](https://nonebot.cqp.moe/)框架的 pcr 公会战特化的 QQ 机器人
+基于 [NoneBot 1.x](https://nonebot.cqp.moe/)框架的 pcr 公会战特化的 QQ 机器人
 
 ## 部署指南 - QuickStart
 
-1. 安装下列软件
+1. 获取下列资源
 
     - Python3 https://www.python.org/
     - NodeJs https://nodejs.org/ & yarn (`npm install -g yarn`)
@@ -34,6 +34,7 @@ A QQBot based on Nonebot for PCR clanbattle
     - requests
     - pillow
     - zhconv
+    - quart_compress
 
 4. 最后，开启两个命令行窗口，其中一个运行 `main.py` ，另一个 `cd nodeweb && yarn && yarn start`
 
@@ -41,7 +42,7 @@ A QQBot based on Nonebot for PCR clanbattle
 
 ##### 公会战命令全部需要在群内使用，请注意命令中的空格，方括号[]表示命令中的可选项
 
-0. 初次使用时，需要设置公会名与服务器地区（需要群主权限）：
+-   初次使用时，需要设置公会名与服务器地区（需要群主权限）：
 
     ```
     创建国服公会 <公会名>
@@ -101,7 +102,7 @@ A QQBot based on Nonebot for PCR clanbattle
 
 -   其他指令
 
-    `状态` / `会战进度` `查尾刀` `每日报告` `昨日报告`
+    `状态` / `会战进度` `查尾刀` `每日报告`
 
 ## 友情链接
 

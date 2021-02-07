@@ -1,5 +1,5 @@
 import nonebot
-from quart import jsonify, request
+from quart import jsonify, request, websocket
 from quart_compress import Compress
 
 from . import decode, encode, get_clan
@@ -67,3 +67,10 @@ async def get_mems():
         return jsonify(result)
     except Exception:
         return jsonify({})
+
+
+@bot.server_app.websocket('/ws')
+async def websockets():
+    while True:
+        data = await websocket.receive()
+        await websocket.send(f"echo {data}")
