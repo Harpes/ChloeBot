@@ -1,4 +1,3 @@
-import csv
 import json
 import re
 import traceback
@@ -11,6 +10,7 @@ from nonebot import CommandSession, on_command, permission, scheduler
 from PIL import Image
 
 from .. import pic2msg, send_su_message
+from .fetch_pcr_nicknames import get_pcr_nickname_data
 
 icon_url = 'https://redive.estertion.win/icon/unit/'
 res_path = 'res'
@@ -76,31 +76,24 @@ async def _(session: CommandSession):
 # @scheduler.scheduled_job('interval', seconds=10)
 @scheduler.scheduled_job('cron', hour=4)
 async def update_chara():
-    new_chara = {"1000": ["未知角色", "未知キャラ", "unknown"]}
+    new_chara = {}
     old_chara = json.load(open(chara_path, 'r', encoding='utf8'))
     delta_chara = {}
 
     try:
-        resp = requests.get(
-            'https://raw.fastgit.org/pcrbot/pcr-nickname/master/nicknames_zh-cn.csv')
-        if resp.status_code != 200:
-            print('获取新名单错误', resp.status_code, resp)
-            return
+        coming_chara = get_pcr_nickname_data()
+        for chara_id, coming_names in coming_chara.items():
+            if(int(chara_id) > 1900):
+                continue
 
-        reader = csv.reader(resp.text.strip().split('\n'))
-        for row in reader:
-            if row[0].isdigit():
-                chara_id, jp_name, cn_name, nicknames = row
-                fetch_names = [cn_name, jp_name] + nicknames.split(',')
-                old_names = old_chara.get(str(chara_id), [])
-                delta_names = []
+            old_names = old_chara.get(str(chara_id), [])
+            delta_names = []
+            for name in coming_names:
+                t_name = normname(name)
+                if len(t_name) > 0 and t_name not in old_names and t_name not in NAME2ID:
+                    delta_names.append(t_name)
 
-                for name in fetch_names:
-                    t_name = normname(name)
-                    if t_name not in old_names and t_name not in NAME2ID and len(t_name) > 0:
-                        delta_names.append(t_name)
-
-                new_chara[chara_id] = old_names + delta_names
+                new_chara[str(chara_id)] = old_names + delta_names
                 if len(delta_names) > 0:
                     delta_chara[chara_id] = delta_names
 
@@ -109,7 +102,7 @@ async def update_chara():
                                       encoding='utf8'), ensure_ascii=False)
             msg = '获取到新的角色名称'
             for chara_id, d_names in delta_chara.items():
-                msg += f'\n「{str(chara_id)}」:{"、".join(d_names)}'
+                msg += f'\n「{str(chara_id)}」{"、".join(d_names)}'
             await send_su_message(msg)
 
     except Exception as ex:

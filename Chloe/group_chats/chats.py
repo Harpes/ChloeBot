@@ -22,9 +22,9 @@ async def _(context):
 async def increase(session: NoticeSession):
     # 发送欢迎消息
     user_id = session.ctx['user_id']
-    me = session.ctx['self_id']
+    self_id = session.ctx['self_id']
     # 判断新成员是否是自己
-    if user_id != me:
+    if user_id != self_id:
         await session.send(f'欢饮新大佬 [CQ:at,qq={user_id}]')
 
 
