@@ -12,8 +12,7 @@ from .battleMaster import BattleMaster
 
 __plugin_name__ = 'clanbattle'
 
-# server_http_adress = 'http://localhost'
-server_http_adress = 'https://harpes.michikawachin.art'
+server_http_adress = 'http://localhost'
 
 
 bot = nonebot.get_bot()

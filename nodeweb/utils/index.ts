@@ -21,7 +21,7 @@ export type Mems = {
 
 export const getDayOfDateString = (value: string) => {
     const dateValue = moment(value, 'YYYY/MM/DD HH:mm');
-    const date = moment().year(dateValue.year()).month(dateValue.month()).date(dateValue.date()).hour(4);
+    const date = moment().year(dateValue.year()).month(dateValue.month()).date(dateValue.date()).hour(5).minute(0);
 
     if (dateValue.isBefore(date)) date.subtract(1, 'day');
 
@@ -29,7 +29,7 @@ export const getDayOfDateString = (value: string) => {
 };
 
 export const getBossDisplayName = (rou: number, boss: number) => {
-    const stage = rou > 34 ? 'D' : rou > 10 ? 'C' : rou > 3 ? 'B' : 'A';
+    const stage = rou > 44 ? 'E' : rou > 34 ? 'D' : rou > 10 ? 'C' : rou > 3 ? 'B' : 'A';
     return `${stage}${boss}`;
 };
 

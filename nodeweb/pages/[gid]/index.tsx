@@ -1,4 +1,4 @@
-import { GetServerSideProps } from 'next';
+import { GetStaticPaths, GetStaticProps } from 'next';
 import React, { useCallback, useState } from 'react';
 
 import AppBar from '../../components/AppBar';
@@ -20,6 +20,10 @@ interface PageProps extends RouteParams {
 }
 
 const GroupPage: React.FunctionComponent<PageProps> = ({ recs, mems, gid, name: groupName }) => {
+    if (!recs) {
+        return <div>Loading</div>;
+    }
+
     const recsMap: { [index: string]: PageProps['recs'] } = {};
 
     const dateSet: Set<string> = new Set<string>();
@@ -97,7 +101,7 @@ const GroupPage: React.FunctionComponent<PageProps> = ({ recs, mems, gid, name: 
     );
 };
 
-export const getServerSideProps: GetServerSideProps<PageProps, RouteParams> = async ({ params }) => {
+export const getStaticProps: GetStaticProps<PageProps, RouteParams> = async ({ params }) => {
     if (params) {
         const { gid } = params;
 
@@ -110,6 +114,7 @@ export const getServerSideProps: GetServerSideProps<PageProps, RouteParams> = as
         if (recs && mems) {
             return {
                 props: { mems, recs, gid, name },
+                revalidate: 60,
             };
         }
     }
@@ -121,6 +126,14 @@ export const getServerSideProps: GetServerSideProps<PageProps, RouteParams> = as
             gid: '',
             name: '',
         },
+        revalidate: 1,
+    };
+};
+
+export const getStaticPaths: GetStaticPaths = async () => {
+    return {
+        paths: [],
+        fallback: true,
     };
 };
 
