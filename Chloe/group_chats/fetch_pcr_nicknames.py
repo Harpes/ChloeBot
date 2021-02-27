@@ -1,4 +1,3 @@
-from datetime import datetime
 from importlib import reload
 from os import listdir, path, remove
 
@@ -17,11 +16,11 @@ def get_pcr_nickname_data():
 
     resp = requests.get('https://api.akiraxie.me/pcr/_pcr_data.py')
     if resp.status_code != 200:
-        return
+        return {}
 
-    data = resp.text.strip()
-    with open(path.join(path.dirname(__file__), f'{temp_file_name}.py'), 'w') as pcr_data_file:
-        pcr_data_file.write(data + f'\n# Updated at {datetime.now()})')
+    data = resp.content
+    with open(path.join(path.dirname(__file__), f'{temp_file_name}.py'), 'wb') as pcr_data_file:
+        pcr_data_file.write(data)
         pcr_data_file.close()
 
     from . import _pcr_nicknames

@@ -378,9 +378,8 @@ async def handle_rec_report(msg: str, gid: int, uid: int):
 
             break
 
-    if 1000 < dmg < 0:
-        msg = '报刀伤害低于1000，已忽略'
-        await bot.send_group_msg(group_id=gid, message=msg)
+    if 0 < dmg < 1000:
+        await bot.send_group_msg(group_id=gid, message='报刀伤害低于1000，已忽略')
         return
     elif dmg > -2:
         await update_rec(gid, uid, dmg, remark)
