@@ -20,7 +20,7 @@ const PersonalChart: React.FunctionComponent<Props> = ({ recs }) => {
     const dateList: Array<string> = [];
 
     let currentDate = '';
-    recs.forEach(({ boss, score, time }) => {
+    recs.forEach(({ boss, score, time, dmg }) => {
         const date = getDayOfDateString(time);
         if (date !== currentDate) {
             currentDate = date;
@@ -32,7 +32,7 @@ const PersonalChart: React.FunctionComponent<Props> = ({ recs }) => {
             bossScores[boss - 1][rowIndex] = 0;
             bossDmages[boss - 1][rowIndex] = 0;
         }
-        bossScores[boss - 1][rowIndex] += score;
+        bossScores[boss - 1][rowIndex] += dmg;
         bossDmages[boss - 1][rowIndex] += score;
     });
 
@@ -47,7 +47,7 @@ const PersonalChart: React.FunctionComponent<Props> = ({ recs }) => {
                 data,
             })),
             ...bossScores.map((data, boss) => ({
-                name: `${names[boss]}伤害`,
+                name: `${names[boss]}分数`,
                 type: 'bar' as 'bar',
                 stack: 'score',
                 barMaxWidth: '20%',
