@@ -50,15 +50,3 @@ def get_rank_def(filename: str):
 command_list = ['前卫rank', '中卫rank', '后卫rank']
 for i, command in enumerate(command_list):
     on_command(command, only_to_me=False)(get_rank_def(rank_file_list[i]))
-
-
-@on_command('rank', only_to_me=False)
-async def _(session: CommandSession):
-    paths = [path.join(path.dirname(__file__), i)
-             for i in ['Rank1.jpg', 'Rank2.jpg', 'Rank3.jpg']]
-
-    if path.exists(paths[0]):
-        cqs = [f'[CQ:image,file=file:///{p}]' for p in paths]
-        await session.finish('煌灵' + ''.join(cqs))
-    else:
-        await session.finish('Rank图未找到')

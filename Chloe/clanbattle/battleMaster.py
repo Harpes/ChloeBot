@@ -20,7 +20,9 @@ class BattleMaster(object):
         self.databaseObj = DataBaseIO()
 
     def get_stage(self, r: int) -> int:
-        if r >= 35:
+        if r >= 45:
+            return 5
+        elif r >= 35:
             return 4
         elif r >= 11:
             return 3
