@@ -127,12 +127,13 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
-*.db
-.DS_Store
-reservations/
-.vscode/settings.json
 
-res/unit
+.DS_Store
+.idea
+.vscode/settings.json
+*.db
 Chloe/group_chats/out
 clanbattle/groups.json
+config/keys.json
 msyhl.ttc
+res/unit

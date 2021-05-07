@@ -9,13 +9,14 @@ from nonebot import CommandSession, on_command
 from PIL import Image, ImageDraw, ImageFont
 
 from .. import get_msg_header, pic2msg
+from ..config import get_configuration_key
 from .chara import gen_chara_avatar, get_chara_id, get_chara_name, res_path
 
 bot = nonebot.get_bot()
 
 # https://pcrdfans.com/bot
 # 请自行前往作业网申请key
-API_KEY = ''
+API_KEY = get_configuration_key('arena_key')
 
 img_size = 60
 

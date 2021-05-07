@@ -1,8 +1,11 @@
 import os
 import random
+from hashlib import md5
 
 import nonebot
 from nonebot import CommandSession, NoticeSession, on_command, on_notice
+
+from .txai import get_nlp_chats
 
 bot = nonebot.get_bot()
 
@@ -14,8 +17,13 @@ async def _(context):
     if len(message) > 20:
         return
 
-    if random.randint(0, 100) < 4:
-        await bot.send_group_msg(group_id=group_id, message=message)
+    if random.randint(1, 100) < 3:
+        session_mark = md5(str(group_id).encode(encoding='utf8')).hexdigest()
+        res = get_nlp_chats(message, session_mark)
+        if len(res) > 0:
+            await bot.send_group_msg(group_id=group_id, message=res)
+        else:
+            await bot.send_group_msg(group_id=group_id, message=message)
 
 
 @on_notice('group_increase')

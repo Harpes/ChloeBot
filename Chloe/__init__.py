@@ -10,7 +10,6 @@ MODULES_ON = {
     'clanbattle',
     'group_chats',
     'manager',
-    # 'arcaea',
 }
 
 fontMSYH = ImageFont.truetype('msyhl.ttc', 14)
@@ -81,9 +80,15 @@ def pic2msg(pic: Image.Image) -> str:
 def get_username(session: CommandSession) -> str:
     sender = session.ctx['sender']
     card = sender.get('card', '')
-    if len(card) > 0:
-        return card
-    return sender['nickname']
+    nickname = sender.get('nickname', '')
+
+    res = ''
+    if len(card) > 0 and 'CQ' not in card:
+        res = card
+    elif len(nickname) > 0 and 'CQ' not in nickname:
+        res = nickname
+
+    return res
 
 
 def get_msg_header(session: CommandSession) -> str:
