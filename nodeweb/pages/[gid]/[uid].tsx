@@ -1,4 +1,4 @@
-import { GetStaticPaths, GetStaticProps } from 'next';
+import { GetServerSideProps } from 'next';
 import React from 'react';
 
 import AppBar from '../../components/AppBar';
@@ -17,9 +17,7 @@ interface PageProps {
 }
 
 const GroupPage: React.FunctionComponent<PageProps> = ({ recs, name }) => {
-    if (!recs) {
-        return <div>Loading</div>;
-    }
+    if (!recs) return null;
 
     return (
         <>
@@ -30,7 +28,7 @@ const GroupPage: React.FunctionComponent<PageProps> = ({ recs, name }) => {
     );
 };
 
-export const getStaticProps: GetStaticProps<PageProps, RouteParams> = async ({ params }) => {
+export const getServerSideProps: GetServerSideProps<PageProps, RouteParams> = async ({ params }) => {
     if (params) {
         const { gid, uid } = params;
 
@@ -40,7 +38,6 @@ export const getStaticProps: GetStaticProps<PageProps, RouteParams> = async ({ p
         if (recs && name) {
             return {
                 props: { name, recs },
-                revalidate: 60,
             };
         }
     }
@@ -50,14 +47,6 @@ export const getStaticProps: GetStaticProps<PageProps, RouteParams> = async ({ p
             recs: [],
             name: '',
         },
-        revalidate: 1,
-    };
-};
-
-export const getStaticPaths: GetStaticPaths<RouteParams> = async () => {
-    return {
-        paths: [],
-        fallback: true,
     };
 };
 

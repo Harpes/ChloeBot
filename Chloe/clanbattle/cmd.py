@@ -322,6 +322,8 @@ async def update_rec(gid: int, uid: int, dmg: int, remark: dict = {}):
         msg += '\n造成过量伤害%s，余时%s秒，补偿刀返还时间%s秒。' % (
             format_num(over_kill), time_remain, time_return)
 
+    cancel_reserve(gid, uid, prev_boss)
+
     _, _, after_boss, _ = add_rec(
         gid, uid, prev_round, prev_boss, dmg, new_flag, remark)
     if prev_boss != after_boss:
@@ -622,7 +624,7 @@ async def see_reserve(gid: int) -> str:
 
 def call_reserve(gid: int, boss: int) -> str:
     reservations = battleObj.get_reservation(gid, boss)
-    battleObj.clear_reservation(gid, boss)
+    # battleObj.clear_reservation(gid, boss)
 
     msg = ''
     for res in reservations:
