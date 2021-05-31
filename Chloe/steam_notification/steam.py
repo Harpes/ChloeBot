@@ -123,7 +123,7 @@ async def _(session: CommandSession):
 
 @scheduler.scheduled_job('cron', minute='*/2')
 async def _():
-    notificate_group_id = (718572700, )
+    notificate_group_id = ()
     if len(notificate_group_id) < 1:
         return
 
@@ -144,6 +144,8 @@ async def _():
                     msgs.append(f'{personaname} 开始游玩 「{gameextrainfo}」')
                 else:
                     msgs.append(f'{personaname} 不再游玩 「{pre_gameextrainfo}」')
+
+        update_player_state(acc)
 
     if len(msgs) > 0:
         bot = nonebot.get_bot()
