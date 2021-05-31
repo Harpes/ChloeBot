@@ -3,27 +3,46 @@ import random
 from hashlib import md5
 
 import nonebot
-from nonebot import CommandSession, NoticeSession, on_command, on_notice
+from nonebot import CommandSession, NoticeSession, on_command, on_notice, scheduler
 
 from .txai import get_nlp_chats
 
 bot = nonebot.get_bot()
 
 
+max_chat_times = 3
+tri_times = {}
+
+
 @bot.on_message('group')
 async def _(context):
     message = context['raw_message']
     group_id = context['group_id']
+
+    if tri_times.setdefault(group_id, 0) > max_chat_times:
+        return
+
     if len(message) > 20:
         return
 
-    if random.randint(1, 100) < 3:
+    if random.randint(1, 100) < 2:
+        tri_times[group_id] += 1
+
         session_mark = md5(str(group_id).encode(encoding='utf8')).hexdigest()
+
         res = get_nlp_chats(message, session_mark)
         if len(res) > 0:
             await bot.send_group_msg(group_id=group_id, message=res)
         else:
             await bot.send_group_msg(group_id=group_id, message=message)
+
+
+@scheduler.scheduled_job('cron', minute='*/20')
+async def _():
+    for k, v in tri_times.items():
+        if v > 0:
+            tri_times[k] = v - 1
+    print(tri_times)
 
 
 @on_notice('group_increase')
