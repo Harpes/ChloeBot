@@ -32,8 +32,8 @@ const PersonalChart: React.FunctionComponent<Props> = ({ recs }) => {
             bossScores[boss - 1][rowIndex] = 0;
             bossDmages[boss - 1][rowIndex] = 0;
         }
-        bossScores[boss - 1][rowIndex] += dmg;
-        bossDmages[boss - 1][rowIndex] += score;
+        bossScores[boss - 1][rowIndex] += score;
+        bossDmages[boss - 1][rowIndex] += dmg;
     });
 
     const option: EChartOption<EChartOption.SeriesBar> = {

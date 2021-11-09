@@ -207,7 +207,7 @@ async def _(session: CommandSession):
     result = []
     n3, n2, n1 = [0, 0, 0]
 
-    for i in range(30):
+    for i in range(20):
         for x in range(10):
             i = rd.random() * 1000
             if i <= pUp:

@@ -26,7 +26,7 @@ async def send_groups_msg(msg: str):
 
 # @nonebot.scheduler.scheduled_job('cron', hour='*')
 # @nonebot.scheduler.scheduled_job('cron', minute='*/5')
-@nonebot.scheduler.scheduled_job('cron', hour=8, minute=0)
+@nonebot.scheduler.scheduled_job('cron', hour=8, minute=0, misfire_grace_time=3600)
 async def _():
     resp = requests.get(api_url)
     if resp.status_code != 200:

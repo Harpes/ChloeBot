@@ -10,7 +10,6 @@ MODULES_ON = {
     'clanbattle',
     'group_chats',
     'manager',
-    'steam_notification',
 }
 
 fontMSYH = ImageFont.truetype('msyhl.ttc', 14)

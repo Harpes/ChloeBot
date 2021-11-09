@@ -14,7 +14,7 @@ def get_pcr_nickname_data():
             if file.startswith(temp_file_name):
                 remove(path.join(cache_folder, file))
 
-    resp = requests.get('https://api.akiraxie.cc/pcr/_pcr_data.py')
+    resp = requests.get('http://api.akiraxie.cc/pcr/_pcr_data.py', verify=False)
     if resp.status_code != 200:
         return {}
 
